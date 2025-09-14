@@ -1,103 +1,218 @@
+"use client";
+import React, { useState } from "react";
 import Image from "next/image";
+import { Gem } from "lucide-react";
+import Stack from "@mui/material/Stack";
+import Button from "@mui/material/Button";
+import { motion } from "framer-motion";
+import ExclusiveCard, { ExclusiveContent } from "@/components/ExclusiveCard";
 
-export default function Home() {
+function Page() {
+  const [exclusiveContent, setExclusiveContent] = useState<ExclusiveContent[]>([
+    {
+      id: 1,
+      title: "Omnix",
+      description: "Awesome work",
+      image: "/ring-1.png",
+    },
+    {
+      id: 2,
+      title: "Gemify",
+      description: "Brilliant design",
+      image: "/ring-1.png",
+    },
+    {
+      id: 3,
+      title: "Sparkle",
+      description: "Shiny creation",
+      image: "/ring-1.png",
+    },
+  ]);
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="flex flex-col md:flex-row w-full">
+      {/* Left Section */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        viewport={{ once: true }}
+        // className="relative w-full md:w-3/5 bg-gradient-to-bl from-[#D8A496] to-[#72574F] min-h-[50vh] md:min-h-[64em] flex flex-col justify-between px-8 py-20 -z-50"
+        className="relative w-full md:w-3/5 bg-animated min-h-[50vh] md:min-h-[64em] flex flex-col justify-between px-8 py-20 -z-50"
+      >
+        {/* 🔹 Animated yellow line */}
+        {/* <motion.div
+          initial={{ opacity: 0, x: -100, y: 100 }}
+          whileInView={{ opacity: 0.6, x: 0, y: 0 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          viewport={{ once: true }}
+          className="absolute top-0 left-0 w-[2px] h-[200%] bg-[#FFE100] rotate-45 -z-40"
+        /> */}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        {/* Background Lines */}
+        <motion.div
+          className="absolute top-0 left-0 w-[2px] h-[200%] bg-[#FFE100]/30 rotate-45 -z-40"
+          initial={{ x: -150, opacity: 0.1 }}
+          animate={{ x: 150, opacity: 0.3 }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute top-0 left-0 w-[1px] h-[200%] bg-[#FFE100]/20 rotate-45 -z-40"
+          initial={{ x: -200 }}
+          animate={{ x: 200 }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            repeatType: "reverse",
+            ease: "easeInOut",
+          }}
+        />
+
+        <div className="max-w-5xl ml-0 md:ml-36">
+          <motion.svg
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+            width="110"
+            height="6"
+            viewBox="0 0 110 6"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <path d="M0 0H110V6H0V0Z" fill="#FFE100" />
+          </motion.svg>
+
+          <h1 className="font-max font-sans font-black py-10 text-3xl md:text-5xl">
+            Master the art of gemology
+          </h1>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <motion.div
+          className="absolute bottom-0 right-0 w-3/4 md:w-[650px] h-auto -z-30"
+          initial={{ opacity: 0, x: 20 }}
+          whileInView={{ opacity: 1, x: 10 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          viewport={{ once: true }}
         >
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="/gem_girl_1.png"
+            alt="model-gem"
+            width={650}
+            height={650}
+            className="w-full h-auto"
+            priority
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </motion.div>
+      </motion.div>
+
+      {/* Right Section */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        viewport={{ once: true }}
+        className="w-full md:w-2/5 flex flex-col justify-between"
+      >
+        <div className="text-xl md:text-2xl mb-4 bg-gradient-to-bl from-[#A98F8A] to-[#433937]">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-16 py-10 md:py-10 px-6 md:px-12"
+          >
+            <Gem size={60} className="md:w-[90px] md:h-[90px]" />
+            <h1 className="font-max font-mono text-center md:text-left md:text-3xl">
+              Royal Gems <br />
+              Institute
+            </h1>
+          </motion.div>
+
+          {/* Paragraph */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="font-mono font-lite max-w-xl px-6 md:px-10 py-6 md:py-10 mx-auto text-center md:text-left text-base md:text-lg"
+          >
+            Blending Sri Lanka’s rich gemstone heritage with world-class
+            training, Royal Gems Institute empowers you to master the art and
+            science of gems.
+          </motion.p>
+
+          {/* Buttons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
+            <Stack
+              spacing={{ xs: 2, md: 4 }}
+              direction={{ xs: "column", md: "row" }}
+              sx={{
+                padding: "10px",
+                margin: "0 auto",
+                display: "flex",
+                justifyContent: "center",
+                maxWidth: "500px",
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  fontSize: { xs: "1rem", md: "1.5rem" },
+                  padding: { xs: "8px 16px", md: "10px 20px" },
+                  bgcolor: "#2F4858",
+                }}
+                fullWidth
+              >
+                Explore Collection
+              </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  fontSize: { xs: "1rem", md: "1.5rem" },
+                  padding: { xs: "8px 16px", md: "10px 20px" },
+                  bgcolor: "#D8A496",
+                }}
+                fullWidth
+              >
+                Academy
+              </Button>
+            </Stack>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-lg md:text-xl"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className=" flex justify-center gap-6">
+            {exclusiveContent.map((card) => (
+              <ExclusiveCard
+                key={card.id}
+                id={card.id}
+                title={card.title}
+                description={card.description}
+                image={card.image}
+              />
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
+
+export default Page;
