@@ -17,37 +17,37 @@ function Navbar() {
   };
 
   return (
-    <div>
+    <div className="relative">
       {/* Logo / Title */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="text-center py-1"
-      >
-        <h1 className="font-sans font-title-max flex flex-col items-center justify-center">
-          Royal
-          <svg
-            width="325"
-            height="8"
-            viewBox="0 0 325 8"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="my-2 w-3/4 md:w-[325px]"
-          >
-            <rect width="325" height="8" fill="#FFE100" />
-          </svg>
-          <span className="font-max"> Gems Institute</span>
-        </h1>
-      </motion.div>
 
       {/* Nav Bar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-        className="bg-gradient-to-r from-[#2F4858] to-[#659BBE] w-full"
+        className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-[#2F4858] to-[#659BBE]"
       >
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center py-1"
+        >
+          <h1 className="font-sans font-title-max flex flex-col items-center justify-center">
+            Royal
+            <svg
+              width="325"
+              height="8"
+              viewBox="0 0 325 8"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="my-2 w-3/4 md:w-[325px]"
+            >
+              <rect width="325" height="8" fill="#FFE100" />
+            </svg>
+            <span className="font-max"> Gems Institute</span>
+          </h1>
+        </motion.div>
         <div className="max-w-screen-xl mx-auto px-4 sm:px-8 md:px-16 lg:px-32 py-4 flex items-center justify-between">
           {/* Desktop Links */}
           <nav className="hidden md:flex space-x-8 font-nav">
@@ -65,7 +65,7 @@ function Navbar() {
                 animate="visible"
                 custom={i}
               >
-                <Link href="/" className="whitespace-nowrap">
+                <Link href="/" className="whitespace-nowrap text-white">
                   {item}
                 </Link>
               </motion.div>
@@ -103,7 +103,7 @@ function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu with AnimatePresence */}
+        {/* Mobile Menu */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -112,7 +112,7 @@ function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="md:hidden bg-gradient-to-r from-[#2F4858] to-[#659BBE] px-4 pb-4 space-y-2 font-nav text-center flex flex-col"
+              className="md:hidden bg-gradient-to-r from-[#2F4858] to-[#659BBE] px-4 pb-4 space-y-2 font-nav text-center flex flex-col text-white"
             >
               <Link href="/">Home</Link>
               <Link href="/">Engagement Rings</Link>
@@ -123,6 +123,9 @@ function Navbar() {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Add padding-top below Navbar */}
+      <div className="pt-24"></div>
     </div>
   );
 }
