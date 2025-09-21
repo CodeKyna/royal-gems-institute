@@ -34,7 +34,7 @@ function Page() {
     // 🔹 Added scroll container
     <div className="lg:h-screen lg:overflow-y-scroll lg:snap-y lg:snap-mandatory scroll-smooth hide-scrollbar">
       {/* ===================== SECTION 1 ===================== */}
-      <section className="lg:h-screen lg:snap-start pt-[220px]">
+      <section className="lg:h-screen lg:snap-start pt-[168px]">
         <div>
           <section className="flex flex-col md:flex-row w-full">
             {/* Left Section */}
@@ -214,14 +214,14 @@ function Page() {
 
       {/* ===================== SECTION 2 ===================== */}
       <motion.section
-        className="lg:h-screen lg:snap-start pt-[220px]"
+        className="lg:h-screen lg:snap-start pt-[168px]"
         id="shop-section"
         initial={{ opacity: 0, y: 80 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
         viewport={{ once: true, amount: 0.3 }} // triggers when 30% is in view
       >
-        <section className="px-4 md:px-8 lg:px-16 py-20">
+        <section className="px-4 md:px-8 lg:px-16 py-2 ">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2 max-w-4xl -ml-14 py-4 mt-8 bg-[#9D798F] rounded-md px-4">
             <ShoppingBag size={40} className="mx-auto sm:mx-0" />
             <h1 className="font-sans font-max text-center sm:text-left">
@@ -230,11 +230,11 @@ function Page() {
           </div>
 
           {/* Content area */}
-          <div className="flex flex-col lg:flex-row mt-8">
+          <div className="max-w-[164em] mx-auto flex flex-col lg:flex-row mt-8">
             {/* Left side */}
             <div className="w-full lg:w-1/2 px-4 lg:px-8 mb-8 lg:mb-0 relative">
               <div className="absolute inset-0 -z-30 bg-yellow-400 [clip-path:polygon(100%_20%,100%_0%,0%_80%,0%_100%)]"></div>
-              <div className=" p-6  rounded-md text-center lg:text-left flex  gap-4">
+              <div className="p-10 rounded-md text-center lg:text-left flex  gap-4 justify-between ">
                 <ITemDisplayCard
                   title="Omnix"
                   image="/item-image.png"
