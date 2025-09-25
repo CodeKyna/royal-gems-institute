@@ -27,6 +27,17 @@ export async function POST(request: NextRequest) {
   if (!email || !firstName || !lastName || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
+
+  // Prevent creating SuperAdmin accounts through this interface
+  if (role === 'SuperAdmin') {
+    return NextResponse.json({ error: 'SuperAdmin accounts can only be created through authorized scripts' }, { status: 403 });
+  }
+
+  // Validate role
+  if (role && !['Admin', 'Moderator'].includes(role)) {
+    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+  }
+
   const { isValid, errors } = validatePasswordStrength(password);
   if (!isValid) return NextResponse.json({ error: errors.join(', ') }, { status: 400 });
 

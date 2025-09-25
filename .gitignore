@@ -39,3 +39,35 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# logs
+logs/
+*.log
+
+# admin scripts (sensitive - should not be committed)
+scripts/create-admin.ts
+scripts/create-superadmin.ts
+scripts/*.ts
+
+# uploads (if storing locally)
+uploads/
+public/uploads/
+
+# database
+*.db
+*.sqlite
+*.sqlite3
+
+# temporary files
+tmp/
+temp/
