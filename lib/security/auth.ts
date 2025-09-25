@@ -1,4 +1,5 @@
-import bcrypt from 'bcryptjs';
+// @ts-ignore
+const bcrypt = require('bcrypt');
 import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';

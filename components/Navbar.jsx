@@ -2,8 +2,17 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 function Navbar() {
+  const pathname = usePathname();
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  // Don't render navbar on admin routes
+  if (isAdminRoute) {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
 
   // variants for desktop links

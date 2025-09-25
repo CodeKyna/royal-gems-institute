@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
       } else {
         setError(data.error || 'Login failed.');
       }
-    } catch (err) {
+    } catch {
       setError('Unexpected error. Please try again.');
     } finally {
       setLoading(false);
@@ -60,14 +60,14 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
+    <div className="min-h-[80vh] flex items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Admin Login</CardTitle>
           <CardDescription>Sign in to access the admin panel.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -83,9 +83,9 @@ export default function AdminLoginPage() {
               </div>
             )}
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center">
               <Button type="submit" disabled={loading}>{loading ? 'Signing in…' : 'Sign In'}</Button>
-              <a href="/admin/forgot-password" className="text-sm hover:underline">Forgot password?</a>
+              
             </div>
           </form>
         </CardContent>

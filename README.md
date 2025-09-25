@@ -48,7 +48,7 @@ This admin panel is built with Next.js App Router, Tailwind, and shadcn/ui, foll
 ## API Routes
 
 - POST /api/auth/login, POST /api/auth/logout, POST /api/auth/refresh
-- POST /api/auth/forgot-password, POST /api/auth/reset-password
+- POST /api/auth/forgot-password (disabled)
 - POST /api/auth/reauth (short-lived cookie for sensitive actions)
 - 2FA: POST/PUT/DELETE /api/auth/2fa
 - Admin:
