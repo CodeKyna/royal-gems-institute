@@ -1,11 +1,13 @@
 "use client";
-import { div } from "framer-motion/client";
-
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import React from "react";
 import Image from "next/image";
 import Button from "@mui/material/Button";
+import { ShoppingCart, Search, Filter } from "lucide-react";
 
 function page() {
+  const [searchTerm, setSearchTerm] = useState("");
   return (
     <div>
       <section className="max-w-[164em] mx-auto flex items-start flex-col min-h-screen py-2 pt-[220px]">
@@ -66,6 +68,23 @@ function page() {
             Explore the Collection
           </h1>
         </div>
+        <div className="bg-[#6b46c1] rounded-lg shadow-sm  p-6 mb-8 max-w-[164em] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 py-2"
+              />
+            </div>
+          </div>
+        </div>
+        {/* add the dropdown filter of catagoriies  */}
+
+        {/* adding scrolable to make the product later make sure to delete */}
+        <div className="pt-[100px]"></div>
       </section>
     </div>
   );
