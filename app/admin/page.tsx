@@ -5,19 +5,30 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
+interface ApiAuditLog {
+  _id: string;
+  action: string;
+  adminEmail: string;
+  resource: string;
+  timestamp: string;
+  success: boolean;
+}
+
+interface ActivityItem {
+  id: string;
+  action: string;
+  adminEmail: string;
+  resource: string;
+  timestamp: string;
+  success: boolean;
+}
+
 interface DashboardStats {
   users: number;
   orders: number;
   revenue: number;
   logins: number;
-  recentActivity: Array<{
-    id: string;
-    action: string;
-    adminEmail: string;
-    resource: string;
-    timestamp: string;
-    success: boolean;
-  }>;
+  recentActivity: ActivityItem[];
 }
 
 export default function AdminDashboard() {
@@ -40,14 +51,14 @@ export default function AdminDashboard() {
 
       if (statsRes.ok) {
         const statsData = await statsRes.json();
-        setStats(prev => ({ ...prev, ...statsData }));
+        setStats((prev: DashboardStats) => ({ ...prev, ...statsData }));
       }
 
       if (logsRes.ok) {
         const logsData = await logsRes.json();
-        setStats(prev => ({
+        setStats((prev: DashboardStats) => ({
           ...prev,
-          recentActivity: logsData.logs.map((log: any) => ({
+          recentActivity: logsData.logs.map((log: ApiAuditLog) => ({
             id: log._id,
             action: log.action,
             adminEmail: log.adminEmail,
@@ -76,77 +87,77 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-2">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Button onClick={loadStats} disabled={loading} variant="outline">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <Button onClick={loadStats} disabled={loading} variant="outline" size="lg">
+          <RefreshCw className={`h-5 w-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-semibold">Total Users</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.users}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
+          <CardContent className="p-0">
+            <div className="text-4xl font-bold text-primary">{stats.users}</div>
+            <p className="text-sm text-muted-foreground mt-2">Registered users</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+        <Card className="p-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-semibold">Total Orders</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.orders}</div>
-            <p className="text-xs text-muted-foreground">All time orders</p>
+          <CardContent className="p-0">
+            <div className="text-4xl font-bold text-primary">{stats.orders}</div>
+            <p className="text-sm text-muted-foreground mt-2">All time orders</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+        <Card className="p-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-semibold">Revenue</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.revenue)}</div>
-            <p className="text-xs text-muted-foreground">Total revenue</p>
+          <CardContent className="p-0">
+            <div className="text-4xl font-bold text-primary">{formatCurrency(stats.revenue)}</div>
+            <p className="text-sm text-muted-foreground mt-2">Total revenue</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Logins</CardTitle>
+        <Card className="p-6">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-lg font-semibold">Recent Logins</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.logins}</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
+          <CardContent className="p-0">
+            <div className="text-4xl font-bold text-primary">{stats.logins}</div>
+            <p className="text-sm text-muted-foreground mt-2">Last 24 hours</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+      <Card className="p-6">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-2xl font-semibold">Recent Activity</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {stats.recentActivity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No recent activity</p>
+            <p className="text-lg text-muted-foreground py-8 text-center">No recent activity</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-4">
               {stats.recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-2 border rounded">
+                <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={activity.success ? "default" : "destructive"}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge variant={activity.success ? "default" : "destructive"} className="text-sm px-3 py-1">
                         {activity.action}
                       </Badge>
-                      <span className="text-sm font-medium">{activity.adminEmail}</span>
-                      <span className="text-sm text-muted-foreground">on {activity.resource}</span>
+                      <span className="text-base font-medium">{activity.adminEmail}</span>
+                      <span className="text-base text-muted-foreground">on {activity.resource}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                    <p className="text-sm text-muted-foreground">{activity.timestamp}</p>
                   </div>
                 </div>
               ))}

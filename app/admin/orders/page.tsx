@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +46,7 @@ export default function OrdersPage() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filter.status && filter.status !== 'all') params.set('status', filter.status);
@@ -58,9 +58,9 @@ export default function OrdersPage() {
     const data = await res.json();
     setOrders(data.orders || []);
     setLoading(false);
-  }
+  }, [filter]);
 
-  useEffect(() => { loadOrders(); }, [filter]);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
 
   async function updateOrder() {
     if (!selectedOrder) return;
@@ -68,7 +68,7 @@ export default function OrdersPage() {
 
     const data = {
       id: selectedOrder._id,
-      ...Object.fromEntries(Object.entries(updateForm).filter(([_, v]) => v !== ''))
+      ...Object.fromEntries(Object.entries(updateForm).filter(([, value]) => value !== ''))
     };
 
     const csrf = document.cookie.split('; ').find(r => r.startsWith('csrfToken='))?.split('=')[1] || '';
@@ -111,17 +111,18 @@ export default function OrdersPage() {
     if (!res.ok) alert('Re-authentication failed');
   }
 
-  const statusColors = {
-    Pending: 'yellow', Processing: 'blue', Shipped: 'purple',
-    Delivered: 'green', Cancelled: 'red', Refunded: 'red'
+  const statusColors: Record<string, "default" | "destructive" | "outline" | "secondary"> = {
+    Pending: 'secondary', Processing: 'default', Shipped: 'outline',
+    Delivered: 'default', Cancelled: 'destructive', Refunded: 'destructive'
   };
 
-  const paymentColors = {
-    Pending: 'yellow', Paid: 'green', Failed: 'red', Refunded: 'red'
+  const paymentColors: Record<string, "default" | "destructive" | "outline" | "secondary"> = {
+    Pending: 'secondary', Paid: 'default', Failed: 'destructive', Refunded: 'destructive'
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ transform: 'scale(1.3)', transformOrigin: 'top center' }}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Order Management</h1>
         <div className="space-x-2">
@@ -195,8 +196,8 @@ export default function OrdersPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">#{order.orderNumber}</h3>
-                        <Badge variant={(statusColors as any)[order.status] || 'secondary'}>{order.status}</Badge>
-                        <Badge variant={(paymentColors as any)[order.paymentStatus] || 'secondary'}>{order.paymentStatus}</Badge>
+                        <Badge variant={statusColors[order.status] || 'secondary'}>{order.status}</Badge>
+                        <Badge variant={paymentColors[order.paymentStatus] || 'secondary'}>{order.paymentStatus}</Badge>
                         {order.isSuspicious && <Badge variant="destructive">Suspicious</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground mb-2">
@@ -295,5 +296,6 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }

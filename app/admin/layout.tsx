@@ -1,43 +1,45 @@
 "use client";
 import Link from 'next/link';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useRouter, usePathname } from 'next/navigation';
 
+interface User {
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    checkAuth();
-  }, [pathname]);
-
-  async function checkAuth() {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/profile', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        setIsAuthenticated(true);
       } else {
-        setIsAuthenticated(false);
         setUser(null);
         // If not on login page and not authenticated, redirect to login
         if (pathname !== '/admin/login') {
           router.push('/admin/login?reason=unauthenticated');
         }
       }
-    } catch (error) {
-      setIsAuthenticated(false);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
-  }
+  }, [pathname, router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   async function handleLogout() {
     try {
@@ -53,7 +55,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         },
         credentials: 'include',
       });
-      setIsAuthenticated(false);
       setUser(null);
       router.push('/admin/login');
     } catch (error) {
@@ -77,7 +78,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (pathname === '/admin/login') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md" style={{ transform: 'scale(1.3)', transformOrigin: 'center' }}>
           {children}
         </div>
       </div>
@@ -86,46 +87,50 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // For authenticated users, show full layout with sidebar
   return (
-    <div className="min-h-screen grid grid-cols-12">
-      <aside className="col-span-12 md:col-span-3 lg:col-span-2 border-r p-4 space-y-4 bg-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-semibold">Admin</span>
-            {user && (
-              <div className="text-xs text-gray-600 mt-1">
-                {user.firstName} {user.lastName}
-              </div>
-            )}
-          </div>
-          <Badge variant="secondary">Secure</Badge>
+    <div className="min-h-screen flex flex-col">
+      {/* Top Navigation Bar */}
+      <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <span className="font-semibold text-lg">Royal Gems Institute - Admin</span>
+          {user && (
+            <div className="text-sm text-gray-600">
+              Welcome, {user.firstName} {user.lastName}
+            </div>
+          )}
         </div>
-        <nav className="flex flex-col space-y-2 text-sm">
-          <Link className="hover:underline" href="/admin">Dashboard</Link>
-          <Link className="hover:underline" href="/admin/users">Users</Link>
-          {user?.role === 'SuperAdmin' && (
-            <Link className="hover:underline" href="/admin/admins">Admins</Link>
-          )}
-          <Link className="hover:underline" href="/admin/gems">Gems</Link>
-          <Link className="hover:underline" href="/admin/orders">Orders</Link>
-          <Link className="hover:underline" href="/admin/logs">Logs</Link>
-          {user?.role === 'SuperAdmin' && (
-            <Link className="hover:underline" href="/admin/settings">Settings</Link>
-          )}
-        </nav>
-        <div className="pt-4 border-t">
+        <div className="flex items-center space-x-4">
+          <Badge variant="secondary">Secure</Badge>
           <Button
             onClick={handleLogout}
             variant="outline"
             size="sm"
-            className="w-full"
           >
             Logout
           </Button>
         </div>
-      </aside>
-      <main className="col-span-12 md:col-span-9 lg:col-span-10 p-6">
-        {children}
-      </main>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex flex-1">
+        <aside className="w-64 border-r p-4 space-y-4 bg-white">
+          <nav className="flex flex-col space-y-2 text-sm">
+            <Link className="hover:underline" href="/admin">Dashboard</Link>
+            <Link className="hover:underline" href="/admin/users">Users</Link>
+            {user?.role === 'SuperAdmin' && (
+              <Link className="hover:underline" href="/admin/admins">Admins</Link>
+            )}
+            <Link className="hover:underline" href="/admin/gems">Gems</Link>
+            <Link className="hover:underline" href="/admin/orders">Orders</Link>
+            <Link className="hover:underline" href="/admin/logs">Logs</Link>
+            {user?.role === 'SuperAdmin' && (
+              <Link className="hover:underline" href="/admin/settings">Settings</Link>
+            )}
+          </nav>
+        </aside>
+        <main className="flex-1 p-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

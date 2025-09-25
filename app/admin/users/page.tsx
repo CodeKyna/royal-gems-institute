@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,13 @@ export default function UsersPage() {
   const [form, setForm] = useState({ email: '', firstName: '', lastName: '', role: 'Moderator', password: '' });
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetch(`/api/admin/users?q=${encodeURIComponent(q)}`, { credentials: 'include' });
     const data = await res.json();
     setUsers(data.users || []);
-  }
-  useEffect(() => { load(); }, []);
+  }, [q]);
+
+  useEffect(() => { load(); }, [load]);
 
   async function createUser(e: React.FormEvent) {
     e.preventDefault();
@@ -81,7 +82,8 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ transform: 'scale(1.3)', transformOrigin: 'top center' }}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Users</h1>
         <div className="space-x-2">
@@ -179,5 +181,6 @@ export default function UsersPage() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }

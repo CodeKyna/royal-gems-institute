@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +13,7 @@ type AuditLog = {
   action: string;
   resourceType: string;
   resourceId?: string;
-  details: any;
+  details: unknown;
   ipAddress: string;
   userAgent: string;
   timestamp: string;
@@ -26,7 +25,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ action: 'all', limit: '50' });
 
-  async function loadLogs() {
+  const loadLogs = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filter.action && filter.action !== 'all') params.set('action', filter.action);
@@ -36,33 +35,34 @@ export default function LogsPage() {
     const data = await res.json();
     setLogs(data.logs || []);
     setLoading(false);
-  }
+  }, [filter]);
 
-  useEffect(() => { loadLogs(); }, [filter]);
+  useEffect(() => { loadLogs(); }, [loadLogs]);
 
-  const actionColors = {
-    LOGIN: 'green',
-    LOGOUT: 'gray',
-    USER_CREATE: 'blue',
-    USER_UPDATE: 'yellow',
-    USER_DELETE: 'red',
-    PRODUCT_CREATE: 'blue',
-    PRODUCT_UPDATE: 'yellow',
-    PRODUCT_DELETE: 'red',
-    ORDER_UPDATE: 'purple',
-    PASSWORD_RESET: 'orange',
-    FAILED_LOGIN: 'red',
-    SUSPICIOUS_ACTIVITY: 'red'
+  const actionColors: Record<string, "default" | "destructive" | "outline" | "secondary"> = {
+    LOGIN: 'default',
+    LOGOUT: 'secondary',
+    USER_CREATE: 'default',
+    USER_UPDATE: 'outline',
+    USER_DELETE: 'destructive',
+    PRODUCT_CREATE: 'default',
+    PRODUCT_UPDATE: 'outline',
+    PRODUCT_DELETE: 'destructive',
+    ORDER_UPDATE: 'outline',
+    PASSWORD_RESET: 'outline',
+    FAILED_LOGIN: 'destructive',
+    SUSPICIOUS_ACTIVITY: 'destructive'
   };
 
-  const formatDetails = (details: any) => {
+  const formatDetails = (details: unknown): string => {
     if (!details) return '';
     if (typeof details === 'string') return details;
     return JSON.stringify(details, null, 2);
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ transform: 'scale(1.3)', transformOrigin: 'top center' }}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Audit Logs</h1>
         <Button onClick={loadLogs}>Refresh</Button>
@@ -123,14 +123,14 @@ export default function LogsPage() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant={(actionColors as any)[log.action] || 'secondary'}>{log.action.replace('_', ' ')}</Badge>
+                        <Badge variant={actionColors[log.action] || 'secondary'}>{log.action.replace('_', ' ')}</Badge>
                         <span className="text-sm text-muted-foreground">{log.email}</span>
                         {!log.success && <Badge variant="destructive">Failed</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground mb-2">
                         {log.resourceType} {log.resourceId ? `(${log.resourceId.slice(-8)})` : ''}
                       </div>
-                      {log.details && (
+                      {log.details != null && (
                         <details className="mb-2">
                           <summary className="text-sm cursor-pointer">Details</summary>
                           <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
@@ -151,5 +151,6 @@ export default function LogsPage() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }

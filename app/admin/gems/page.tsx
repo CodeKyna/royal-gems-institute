@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,7 @@ export default function GemsPage() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  async function loadGems() {
+  const loadGems = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filter.status && filter.status !== 'all') params.set('status', filter.status);
@@ -54,9 +54,9 @@ export default function GemsPage() {
     const data = await res.json();
     setGems(data.gems || []);
     setLoading(false);
-  }
+  }, [filter]);
 
-  useEffect(() => { loadGems(); }, [filter]);
+  useEffect(() => { loadGems(); }, [loadGems]);
 
   async function uploadImage(file: File): Promise<string> {
     const formData = new FormData();
@@ -167,7 +167,8 @@ export default function GemsPage() {
   const statusColors = { Pending: 'yellow', Approved: 'green', Rejected: 'red' };
 
   return (
-    <div className="space-y-6">
+    <div style={{ transform: 'scale(1.3)', transformOrigin: 'top center' }}>
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Gem Management</h1>
         <Button onClick={() => setCreating(!creating)}>{creating ? 'Cancel' : 'Add Gem'}</Button>
@@ -337,5 +338,6 @@ export default function GemsPage() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 }

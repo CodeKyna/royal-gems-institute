@@ -93,157 +93,165 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">System Settings</h1>
-        <Button variant="outline" onClick={reauth}>Re-authenticate</Button>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-
-      {/* Role Management */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Role Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Assign roles to users. Changes require re-authentication.
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2">User</th>
-                    <th>Current Role</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user._id} className="border-b">
-                      <td className="py-2">
-                        <div>
-                          <div className="font-medium">{user.firstName} {user.lastName}</div>
-                          <div className="text-muted-foreground">{user.email}</div>
-                        </div>
-                      </td>
-                      <td>
-                        <Badge variant={user.role === 'SuperAdmin' ? 'default' : user.role === 'Admin' ? 'secondary' : 'outline'}>
-                          {user.role}
-                        </Badge>
-                      </td>
-                      <td>{user.isActive ? 'Active' : 'Suspended'}</td>
-                      <td className="text-sm">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
-                        {user.loginCount > 0 && <span className="text-muted-foreground"> ({user.loginCount} logins)</span>}
-                      </td>
-                      <td>
-                        <Select
-                          defaultValue={user.role}
-                          onValueChange={(v) => updateUserRole(user._id, v)}
-                          disabled={user.email === 'admin@royalgems.com'} // Prevent changing the default admin
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Moderator">Moderator</SelectItem>
-                            <SelectItem value="Admin">Admin</SelectItem>
-                            <SelectItem value="SuperAdmin">SuperAdmin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Permissions Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Permission Matrix</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Overview of permissions assigned to each role.
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2">Permission</th>
-                    <th>Description</th>
-                    <th>Moderator</th>
-                    <th>Admin</th>
-                    <th>SuperAdmin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {permissions.map((perm) => (
-                    <tr key={perm.name} className="border-b">
-                      <td className="py-2 font-medium">{perm.name.replace('_', ' ')}</td>
-                      <td className="text-muted-foreground">{perm.description}</td>
-                      <td>{perm.roles.includes('Moderator') ? '✓' : '✗'}</td>
-                      <td>{perm.roles.includes('Admin') ? '✓' : '✗'}</td>
-                      <td>{perm.roles.includes('SuperAdmin') ? '✓' : '✗'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Security Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label>Session Timeout (minutes)</Label>
-                <Input type="number" defaultValue="60" disabled />
-                <p className="text-xs text-muted-foreground mt-1">Currently fixed at 60 minutes</p>
-              </div>
-              <div>
-                <Label>Failed Login Attempts</Label>
-                <Input type="number" defaultValue="5" disabled />
-                <p className="text-xs text-muted-foreground mt-1">Account locks after 5 failed attempts</p>
-              </div>
-              <div>
-                <Label>Password Requirements</Label>
-                <div className="text-sm text-muted-foreground">
-                  • Minimum 12 characters<br />
-                  • Uppercase, lowercase, number, special character
-                </div>
-              </div>
-              <div>
-                <Label>2FA Required</Label>
-                <div className="text-sm text-muted-foreground">
-                  • Mandatory for Admin and SuperAdmin roles<br />
-                  • Optional for Moderator role
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    {/* Header */}
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
+      <h1 className="text-2xl md:text-3xl font-semibold">System Settings</h1>
+      <Button variant="outline" onClick={reauth}>Re-authenticate</Button>
     </div>
-  );
+
+    {/* Error */}
+    {error && (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        {error}
+      </div>
+    )}
+
+    {/* Role Management */}
+    <Card>
+      <CardHeader>
+        <CardTitle>Role Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Assign roles to users. Changes require re-authentication.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b">
+                  <th className="py-2">User</th>
+                  <th>Current Role</th>
+                  <th>Status</th>
+                  <th>Last Login</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user._id} className="border-b">
+                    <td className="py-2">
+                      <div>
+                        <div className="font-medium">{user.firstName} {user.lastName}</div>
+                        <div className="text-muted-foreground">{user.email}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <Badge
+                        variant={
+                          user.role === 'SuperAdmin' ? 'default' :
+                          user.role === 'Admin' ? 'secondary' : 'outline'
+                        }
+                      >
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td>{user.isActive ? 'Active' : 'Suspended'}</td>
+                    <td className="text-sm">
+                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                      {user.loginCount > 0 && <span className="text-muted-foreground"> ({user.loginCount} logins)</span>}
+                    </td>
+                    <td>
+                      <Select
+                        defaultValue={user.role}
+                        onValueChange={(v) => updateUserRole(user._id, v)}
+                        disabled={user.email === 'admin@royalgems.com'}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Moderator">Moderator</SelectItem>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="SuperAdmin">SuperAdmin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Permissions Overview */}
+    <Card>
+      <CardHeader>
+        <CardTitle>Permission Matrix</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Overview of permissions assigned to each role.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b">
+                  <th className="py-2">Permission</th>
+                  <th>Description</th>
+                  <th>Moderator</th>
+                  <th>Admin</th>
+                  <th>SuperAdmin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {permissions.map((perm) => (
+                  <tr key={perm.name} className="border-b">
+                    <td className="py-2 font-medium">{perm.name.replace('_', ' ')}</td>
+                    <td className="text-muted-foreground">{perm.description}</td>
+                    <td>{perm.roles.includes('Moderator') ? '✓' : '✗'}</td>
+                    <td>{perm.roles.includes('Admin') ? '✓' : '✗'}</td>
+                    <td>{perm.roles.includes('SuperAdmin') ? '✓' : '✗'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Security Settings */}
+    <Card>
+      <CardHeader>
+        <CardTitle>Security Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+            <div>
+              <Label>Session Timeout (minutes)</Label>
+              <Input type="number" defaultValue="60" disabled />
+              <p className="text-xs text-muted-foreground mt-1">Currently fixed at 60 minutes</p>
+            </div>
+            <div>
+              <Label>Failed Login Attempts</Label>
+              <Input type="number" defaultValue="5" disabled />
+              <p className="text-xs text-muted-foreground mt-1">Account locks after 5 failed attempts</p>
+            </div>
+            <div>
+              <Label>Password Requirements</Label>
+              <div className="text-sm text-muted-foreground">
+                • Minimum 12 characters<br />
+                • Uppercase, lowercase, number, special character
+              </div>
+            </div>
+            <div>
+              <Label>2FA Required</Label>
+              <div className="text-sm text-muted-foreground">
+                • Mandatory for Admin and SuperAdmin roles<br />
+                • Optional for Moderator role
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
+
 }
