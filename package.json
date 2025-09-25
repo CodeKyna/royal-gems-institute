@@ -36,6 +36,7 @@
     "clsx": "^2.1.1",
     "csrf": "^3.1.0",
     "framer-motion": "^12.23.12",
+    "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.544.0",
     "mongoose": "^8.18.2",
