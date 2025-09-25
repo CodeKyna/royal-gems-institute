@@ -7,10 +7,7 @@ interface CollectionPageProps {
   onAddToCart: (product: Product) => void;
 }
 
-const CollectionPage: React.FC<CollectionPageProps> = ({
-  products,
-  onAddToCart,
-}) => {
+const CollectionPage = ({ products, onAddToCart }: CollectionPageProps) => {
   return (
     <div className="max-w-[164rem] mx-auto px-4 sm:px-6 lg:px-8 py-8 border-2 border-amber-500/45 rounded-3xl bg-gradient-to-b from-black/30 to-black/10 backdrop-blur-md *:">
       {/* Header */}
