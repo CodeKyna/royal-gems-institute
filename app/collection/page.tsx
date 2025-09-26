@@ -17,8 +17,9 @@ import {
 import CollectionPage from "@/components/CollectionPage";
 import { CartItem, Product, Order } from "../../types";
 import { supabase } from "@/lib/supabase";
-
+import Cart from "@/components/Cart";
 import { dummyProducts } from "@/lib/data";
+import Checkout from "@/components/Checkout";
 
 function page() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,9 +44,24 @@ function page() {
     if (data) setProducts(data);
     else setProducts(dummyProducts); // Fallback to dummy data
   };
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        `
+        *,
+        order_items (
+          *,
+          products (*)
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
 
-  console.log();
+    if (data) setOrders(data);
+  };
 
+  // the function to cart
   const addToCart = (product: Product) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
@@ -59,6 +75,33 @@ function page() {
       return [...prev, { product, quantity: 1 }];
     });
   };
+
+  const removeFromCart = (productId: string) => {
+    setCartItems((prev) =>
+      prev.filter((item) => item.product.id !== productId)
+    );
+  };
+
+  const updateQuantity = (productId: string, quantity: number) => {
+    if (quantity === 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const cartItemsCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
   return (
     <div className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar">
@@ -114,37 +157,67 @@ function page() {
         </div>
       </section>
       {/* filter gonna be applied here */}
-      <section className="min-h-screen snap-start pt-[220px]">
+      <section
+        className="min-h-screen snap-start pt-[220px]"
+        id="collections-section"
+      >
+        <div className="flex justify-end items-center px-10 py-5 fixed top-0 left-0 right-0 z-50">
+          <button
+            onClick={() => {
+              setCurrentPage("cart");
+              // Scroll to the "Exquisite Collection" section
+              const section = document.getElementById(
+                "exquisite-collection-section"
+              );
+              if (section) {
+                section.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className="relative p-2 text-white/70 hover:text-white transition-colors"
+          >
+            <ShoppingCart className="w-20 h-20" />
+            {cartItemsCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-yellow-500 text-black text-lg rounded-full w-10 h-10 flex items-center justify-center font-medium">
+                {cartItemsCount}
+              </span>
+            )}
+          </button>
+        </div>
         <div className="flex-1">
           {currentPage === "collection" && !isAdmin && (
-            <CollectionPage products={products} onAddToCart={addToCart} />
+            <section
+              id="exquisite-collection-section"
+              className="min-h-screen snap-start pt-[220px]"
+            >
+              <CollectionPage products={products} onAddToCart={addToCart} />
+            </section>
           )}
-          {/* {currentPage === 'cart' && !isAdmin && (
-          <Cart
-            items={cartItems}
-            onUpdateQuantity={updateQuantity}
-            onRemove={removeFromCart}
-            onProceedToCheckout={() => setCurrentPage('checkout')}
-          />
-        )}
-        {currentPage === 'checkout' && !isAdmin && (
-          <Checkout
-            items={cartItems}
-            onOrderComplete={() => {
-              clearCart();
-              setCurrentPage('collection');
-              fetchOrders();
-            }}
-          />
-        )}
-        {isAdmin && (
-          <AdminPanel
-            products={products}
-            orders={orders}
-            onProductsUpdate={fetchProducts}
-            onOrdersUpdate={fetchOrders}
-          />
-        )} */}
+          {currentPage === "cart" && !isAdmin && (
+            <Cart
+              items={cartItems}
+              onUpdateQuantity={updateQuantity}
+              onRemove={removeFromCart}
+              onProceedToCheckout={() => setCurrentPage("checkout")}
+            />
+          )}
+          {currentPage === "checkout" && !isAdmin && (
+            <Checkout
+              items={cartItems}
+              onOrderComplete={() => {
+                clearCart();
+                setCurrentPage("collection");
+                fetchOrders();
+              }}
+            />
+          )}
+          {/* {/* {isAdmin && (
+            <AdminPanel
+              products={products}
+              orders={orders}
+              onProductsUpdate={fetchProducts}
+              onOrdersUpdate={fetchOrders}
+            />
+          )} */}
         </div>
         {/* adding scrolable to make the product later make sure to delete */}
 

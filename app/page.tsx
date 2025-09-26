@@ -7,6 +7,8 @@ import Button from "@mui/material/Button";
 import { motion } from "framer-motion";
 import ExclusiveCard, { ExclusiveContent } from "@/components/ExclusiveCard";
 import ITemDisplayCard from "@/components/ITemDisplayCard";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 function Page() {
   const [exclusiveContent, setExclusiveContent] = useState<ExclusiveContent[]>([
@@ -29,6 +31,15 @@ function Page() {
       image: "/ring-1.png",
     },
   ]);
+  const router = useRouter();
+
+  const exploreBtnHandler = () => {
+    //use the nacvigation to collection page here
+    toast.success("Navigating to Collection Page!", { duration: 1500 });
+    setTimeout(() => {
+      router.push("/collection");
+    }, 1500);
+  };
 
   return (
     // 🔹 Added scroll container
@@ -170,6 +181,7 @@ function Page() {
                         bgcolor: "#2F4858",
                       }}
                       fullWidth
+                      onClick={() => exploreBtnHandler()}
                     >
                       Explore Collection
                     </Button>
