@@ -1,343 +1,903 @@
 "use client";
-import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  Gem,
+  Plus,
+  Search,
+  Filter,
+  Edit3,
+  Trash2,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  RefreshCw,
+  Image as ImageIcon,
+  DollarSign,
+  Package,
+  Tag,
+  Calendar,
+  Activity,
+  Star,
+  TrendingUp,
+  Archive,
+  ShoppingCart,
+} from "lucide-react";
 
-type Gem = {
-  _id: string;
+export interface Product {
+  id: string;
   name: string;
   description: string;
-  category: string;
   price: number;
-  images: string[];
-  specifications: {
-    carat?: number;
-    color?: string;
-    clarity?: string;
-    cut?: string;
-    certification?: string;
-  };
-  isActive: boolean;
-  sellerId?: { email: string; firstName: string; lastName: string };
-  approvedBy?: { email: string };
-  approvalStatus: 'Pending' | 'Approved' | 'Rejected';
-  stock: number;
-  createdAt: string;
-};
+  image_url: string;
+  category: string;
+  stock_quantity: number;
+  active: boolean;
+  created_at: string;
+}
 
-export default function GemsPage() {
-  const [gems, setGems] = useState<Gem[]>([]);
-  const [loading, setLoading] = useState(true);
+const CATEGORIES = [
+  "Ruby",
+  "Sapphire",
+  "Emerald",
+  "Diamond",
+  "Topaz",
+  "Amethyst",
+  "Garnet",
+  "Opal",
+  "Peridot",
+  "Aquamarine",
+  "Tanzanite",
+  "Tourmaline",
+];
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([
+    {
+      id: "1",
+      name: "Ceylon Blue Sapphire",
+      description:
+        "A stunning Ceylon blue sapphire with exceptional clarity and brilliant cut. Perfect for engagement rings.",
+      price: 2500.0,
+      image_url:
+        "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop",
+      category: "Sapphire",
+      stock_quantity: 5,
+      active: true,
+      created_at: "2024-01-15T10:30:00Z",
+    },
+    {
+      id: "2",
+      name: "Burmese Ruby Premium",
+      description:
+        "Rare Burmese ruby with deep red color and excellent transparency. Certified natural stone.",
+      price: 4200.0,
+      image_url:
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=300&fit=crop",
+      category: "Ruby",
+      stock_quantity: 2,
+      active: true,
+      created_at: "2024-02-20T14:22:00Z",
+    },
+    {
+      id: "3",
+      name: "Colombian Emerald",
+      description:
+        "Premium Colombian emerald with vivid green color and minimal inclusions. Investment grade quality.",
+      price: 3800.0,
+      image_url:
+        "https://images.unsplash.com/photo-1544980919-e17526d4ed0a?w=300&h=300&fit=crop",
+      category: "Emerald",
+      stock_quantity: 0,
+      active: false,
+      created_at: "2024-01-05T09:15:00Z",
+    },
+    {
+      id: "4",
+      name: "Pink Diamond Rare",
+      description:
+        "Extremely rare pink diamond with exceptional brilliance. Perfect for luxury jewelry.",
+      price: 15000.0,
+      image_url:
+        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop",
+      category: "Diamond",
+      stock_quantity: 1,
+      active: true,
+      created_at: "2024-03-10T16:45:00Z",
+    },
+  ]);
+
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [priceRange, setPriceRange] = useState("All");
+  const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<Gem | null>(null);
-  const [filter, setFilter] = useState({ status: 'all', category: 'all', q: '' });
+  const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState({
-    name: '', description: '', category: 'Diamond', price: '', stock: '1',
-    images: [] as string[],
-    specifications: { carat: '', color: '', clarity: '', cut: '', certification: '' }
+    name: "",
+    description: "",
+    price: 0,
+    image_url: "",
+    category: "Ruby",
+    stock_quantity: 0,
+    active: true,
   });
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const loadGems = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (filter.status && filter.status !== 'all') params.set('status', filter.status);
-    if (filter.category && filter.category !== 'all') params.set('category', filter.category);
-    if (filter.q) params.set('q', filter.q);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    const res = await fetch(`/api/admin/gems?${params}`, { credentials: 'include' });
-    const data = await res.json();
-    setGems(data.gems || []);
-    setLoading(false);
-  }, [filter]);
+  useEffect(() => {
+    applyFilters();
+  }, [products, searchQuery, categoryFilter, statusFilter, priceRange]);
 
-  useEffect(() => { loadGems(); }, [loadGems]);
+  function applyFilters() {
+    let filtered = [...products];
 
-  async function uploadImage(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const csrf = document.cookie.split('; ').find(r => r.startsWith('csrfToken='))?.split('=')[1] || '';
-    const res = await fetch('/api/admin/upload', {
-      method: 'POST',
-      headers: { 'x-csrf-token': csrf },
-      credentials: 'include',
-      body: formData
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    return data.path;
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (product) =>
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Category filter
+    if (categoryFilter !== "All") {
+      filtered = filtered.filter(
+        (product) => product.category === categoryFilter
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== "All") {
+      if (statusFilter === "Active") {
+        filtered = filtered.filter((product) => product.active);
+      } else if (statusFilter === "Inactive") {
+        filtered = filtered.filter((product) => !product.active);
+      } else if (statusFilter === "Out of Stock") {
+        filtered = filtered.filter((product) => product.stock_quantity === 0);
+      } else if (statusFilter === "Low Stock") {
+        filtered = filtered.filter(
+          (product) => product.stock_quantity > 0 && product.stock_quantity <= 5
+        );
+      }
+    }
+
+    // Price range filter
+    if (priceRange !== "All") {
+      if (priceRange === "Under $1000") {
+        filtered = filtered.filter((product) => product.price < 1000);
+      } else if (priceRange === "$1000-$5000") {
+        filtered = filtered.filter(
+          (product) => product.price >= 1000 && product.price <= 5000
+        );
+      } else if (priceRange === "$5000-$10000") {
+        filtered = filtered.filter(
+          (product) => product.price > 5000 && product.price <= 10000
+        );
+      } else if (priceRange === "Over $10000") {
+        filtered = filtered.filter((product) => product.price > 10000);
+      }
+    }
+
+    setFilteredProducts(filtered);
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
+  function resetForm() {
+    setForm({
+      name: "",
+      description: "",
+      price: 0,
+      image_url: "",
+      category: "Ruby",
+      stock_quantity: 0,
+      active: true,
+    });
+    setError(null);
+  }
+
+  function startEdit(product: Product) {
+    setEditing(product);
+    setForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image_url: product.image_url,
+      category: product.category,
+      stock_quantity: product.stock_quantity,
+      active: product.active,
+    });
+    setCreating(false);
+  }
+
+  async function saveProduct() {
+    setError(null);
+    setLoading(true);
 
     try {
-      const uploads = Array.from(files).map(uploadImage);
-      const paths = await Promise.all(uploads);
-      setForm(prev => ({ ...prev, images: [...prev.images, ...paths] }));
-    } catch (err: any) {
-      setError(err.message);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (editing) {
+        // Update existing product
+        setProducts((prev) =>
+          prev.map((p) => (p.id === editing.id ? { ...p, ...form } : p))
+        );
+        setEditing(null);
+      } else {
+        // Create new product
+        const newProduct: Product = {
+          id: Date.now().toString(),
+          ...form,
+          created_at: new Date().toISOString(),
+        };
+        setProducts((prev) => [newProduct, ...prev]);
+        setCreating(false);
+      }
+
+      resetForm();
+    } catch (err) {
+      setError("Failed to save product");
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function saveGem(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+  async function deleteProduct(product: Product) {
+    if (!confirm(`Are you sure you want to delete "${product.name}"?`)) return;
 
-    const data = {
-      ...form,
-      price: Number(form.price),
-      stock: Number(form.stock),
-      specifications: Object.fromEntries(
-        Object.entries(form.specifications).filter(([_, v]) => v !== '')
-      )
-    };
-
-    const csrf = document.cookie.split('; ').find(r => r.startsWith('csrfToken='))?.split('=')[1] || '';
-    const method = editing ? 'PUT' : 'POST';
-    const body = editing ? { ...data, id: editing._id } : data;
-
-    const res = await fetch('/api/admin/gems', {
-      method,
-      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
-      credentials: 'include',
-      body: JSON.stringify(body)
-    });
-
-    const result = await res.json();
-    if (!res.ok) { setError(result.error || 'Failed'); return; }
-
-    setCreating(false);
-    setEditing(null);
-    setForm({
-      name: '', description: '', category: 'Diamond', price: '', stock: '1',
-      images: [],
-      specifications: { carat: '', color: '', clarity: '', cut: '', certification: '' }
-    });
-    await loadGems();
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function approveGem(gem: Gem, status: 'Approved' | 'Rejected') {
-    const csrf = document.cookie.split('; ').find(r => r.startsWith('csrfToken='))?.split('=')[1] || '';
-    await fetch('/api/admin/gems', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf },
-      credentials: 'include',
-      body: JSON.stringify({ id: gem._id, approvalStatus: status })
-    });
-    await loadGems();
+  async function toggleActive(product: Product) {
+    setLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? { ...p, active: !p.active } : p))
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function deleteGem(gem: Gem) {
-    if (!confirm('Delete this gem?')) return;
-    const csrf = document.cookie.split('; ').find(r => r.startsWith('csrfToken='))?.split('=')[1] || '';
-    await fetch(`/api/admin/gems?id=${gem._id}`, {
-      method: 'DELETE',
-      headers: { 'x-csrf-token': csrf },
-      credentials: 'include'
-    });
-    await loadGems();
+  function formatPrice(price: number) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(price);
   }
 
-  function startEdit(gem: Gem) {
-    setEditing(gem);
-    setForm({
-      name: gem.name,
-      description: gem.description,
-      category: gem.category,
-      price: gem.price.toString(),
-      stock: gem.stock.toString(),
-      images: gem.images,
-      specifications: {
-        carat: gem.specifications?.carat?.toString() || '',
-        color: gem.specifications?.color || '',
-        clarity: gem.specifications?.clarity || '',
-        cut: gem.specifications?.cut || '',
-        certification: gem.specifications?.certification || ''
-      }
-    });
+  function getStockBadgeColor(quantity: number) {
+    if (quantity === 0) return "from-red-500 to-pink-500";
+    if (quantity <= 5) return "from-orange-500 to-amber-500";
+    return "from-emerald-500 to-teal-500";
   }
 
-  const statusColors = { Pending: 'yellow', Approved: 'green', Rejected: 'red' };
+  function getStockStatus(quantity: number) {
+    if (quantity === 0) return "Out of Stock";
+    if (quantity <= 5) return "Low Stock";
+    return "In Stock";
+  }
+
+  if (!mounted) {
+    return null;
+  }
+
+  const stats = {
+    total: products.length,
+    active: products.filter((p) => p.active).length,
+    outOfStock: products.filter((p) => p.stock_quantity === 0).length,
+    lowStock: products.filter(
+      (p) => p.stock_quantity > 0 && p.stock_quantity <= 5
+    ).length,
+    totalValue: products.reduce(
+      (sum, p) => sum + p.price * p.stock_quantity,
+      0
+    ),
+  };
 
   return (
-    <div style={{ transform: 'scale(1.3)', transformOrigin: 'top center' }}>
-      <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Gem Management</h1>
-        <Button onClick={() => setCreating(!creating)}>{creating ? 'Cancel' : 'Add Gem'}</Button>
+    <div className="admin-products-page space-y-8">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute top-20 right-10 w-32 h-32 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full animate-pulse"></div>
+        <div
+          className="absolute bottom-20 left-10 w-24 h-24 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full animate-bounce"
+          style={{ animationDuration: "3s" }}
+        ></div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div>
-              <Label>Status</Label>
-              <Select value={filter.status} onValueChange={(v) => setFilter({...filter, status: v})}>
-                <SelectTrigger><SelectValue placeholder="All Status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Header Section with Stats */}
+      <div className="relative z-10 backdrop-blur-md bg-white/80 dark:bg-slate-800/80 rounded-2xl p-6 shadow-2xl border border-white/20">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
+              <Gem className="h-8 w-8 text-white" />
             </div>
             <div>
-              <Label>Category</Label>
-              <Select value={filter.category} onValueChange={(v) => setFilter({...filter, category: v})}>
-                <SelectTrigger><SelectValue placeholder="All Categories" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="Diamond">Diamond</SelectItem>
-                  <SelectItem value="Ruby">Ruby</SelectItem>
-                  <SelectItem value="Sapphire">Sapphire</SelectItem>
-                  <SelectItem value="Emerald">Emerald</SelectItem>
-                  <SelectItem value="Pearl">Pearl</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Search</Label>
-              <Input placeholder="Gem name..." value={filter.q} onChange={(e) => setFilter({...filter, q: e.target.value})} />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={loadGems}>Refresh</Button>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                Gems & Products
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">
+                Manage your precious gems inventory
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={() => {
+                setCreating(!creating);
+                setEditing(null);
+                resetForm();
+              }}
+              className={`${
+                creating
+                  ? "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                  : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              } text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}
+            >
+              {creating ? (
+                <XCircle className="h-5 w-5 mr-2" />
+              ) : (
+                <Plus className="h-5 w-5 mr-2" />
+              )}
+              {creating ? "Cancel" : "Add Product"}
+            </Button>
+          </div>
+        </div>
 
-      {/* Create/Edit Form */}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+          <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-slate-800 dark:text-white">
+              {stats.total}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Total Products
+            </div>
+          </div>
+          <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-emerald-600">
+              {stats.active}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Active
+            </div>
+          </div>
+          <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {stats.outOfStock}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Out of Stock
+            </div>
+          </div>
+          <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-orange-600">
+              {stats.lowStock}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Low Stock
+            </div>
+          </div>
+          <div className="bg-white/60 dark:bg-slate-700/60 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {formatPrice(stats.totalValue)}
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">
+              Total Value
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <div className="flex items-center text-red-600 dark:text-red-400">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            {error}
+          </div>
+        </div>
+      )}
+
+      {/* Create/Edit Product Form */}
       {(creating || editing) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editing ? 'Edit Gem' : 'Create New Gem'}</CardTitle>
+        <Card
+          className="backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-2xl rounded-2xl overflow-hidden"
+          style={{ animation: "slideDown 0.5s ease-out" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5"></div>
+          <CardHeader className="relative z-10 bg-gradient-to-r from-slate-50 to-purple-50 dark:from-slate-800 dark:to-slate-700 border-b border-slate-200/50 dark:border-slate-600/50">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg">
+                <Gem className="h-5 w-5 text-white" />
+              </div>
+              <CardTitle className="text-xl font-bold text-slate-800 dark:text-white">
+                {editing ? "Edit Product" : "Add New Product"}
+              </CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={saveGem}>
-              <div className="md:col-span-2">
-                <Label>Name</Label>
-                <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required />
+          <CardContent className="relative z-10 p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Tag className="h-4 w-4 mr-2" />
+                  Product Name
+                </Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="h-12 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl"
+                  placeholder="Ceylon Blue Sapphire"
+                  required
+                />
               </div>
-              <div className="md:col-span-2">
-                <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} required />
-              </div>
-              <div>
-                <Label>Category</Label>
-                <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+
+              <div className="space-y-3">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Package className="h-4 w-4 mr-2" />
+                  Category
+                </Label>
+                <Select
+                  value={form.category}
+                  onValueChange={(v) => setForm({ ...form, category: v })}
+                >
+                  <SelectTrigger className="h-12 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Diamond">Diamond</SelectItem>
-                    <SelectItem value="Ruby">Ruby</SelectItem>
-                    <SelectItem value="Sapphire">Sapphire</SelectItem>
-                    <SelectItem value="Emerald">Emerald</SelectItem>
-                    <SelectItem value="Pearl">Pearl</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Price ($)</Label>
-                <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} required />
+
+              <div className="space-y-3 md:col-span-2">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Description
+                </Label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  className="w-full h-24 p-3 bg-white/60 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Detailed description of the gemstone..."
+                  required
+                />
               </div>
-              <div>
-                <Label>Stock</Label>
-                <Input type="number" value={form.stock} onChange={(e) => setForm({...form, stock: e.target.value})} required />
+
+              <div className="space-y-3">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Price (USD)
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.price}
+                  onChange={(e) =>
+                    setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                  }
+                  className="h-12 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl"
+                  placeholder="2500.00"
+                  required
+                />
               </div>
-              <div className="md:col-span-2">
-                <Label>Images</Label>
-                <Input type="file" multiple accept="image/*" onChange={handleImageUpload} />
-                <div className="flex gap-2 mt-2">
-                  {form.images.map((img, i) => (
-                    <img key={i} src={`/${img}`} alt="" className="w-16 h-16 object-cover rounded" />
-                  ))}
-                </div>
+
+              <div className="space-y-3">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Stock Quantity
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.stock_quantity}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      stock_quantity: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="h-12 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl"
+                  placeholder="5"
+                  required
+                />
               </div>
-              <div>
-                <Label>Carat</Label>
-                <Input value={form.specifications.carat} onChange={(e) => setForm({...form, specifications: {...form.specifications, carat: e.target.value}})} />
+
+              <div className="space-y-3 md:col-span-2">
+                <Label className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Image URL
+                </Label>
+                <Input
+                  value={form.image_url}
+                  onChange={(e) =>
+                    setForm({ ...form, image_url: e.target.value })
+                  }
+                  className="h-12 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl"
+                  placeholder="https://example.com/sapphire.jpg"
+                />
               </div>
-              <div>
-                <Label>Color</Label>
-                <Input value={form.specifications.color} onChange={(e) => setForm({...form, specifications: {...form.specifications, color: e.target.value}})} />
+
+              <div className="flex items-center space-x-3 md:col-span-2">
+                <input
+                  type="checkbox"
+                  id="active"
+                  checked={form.active}
+                  onChange={(e) =>
+                    setForm({ ...form, active: e.target.checked })
+                  }
+                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                />
+                <Label
+                  htmlFor="active"
+                  className="text-sm font-semibold text-slate-700 dark:text-slate-300"
+                >
+                  Product is active and available for sale
+                </Label>
               </div>
-              <div>
-                <Label>Clarity</Label>
-                <Input value={form.specifications.clarity} onChange={(e) => setForm({...form, specifications: {...form.specifications, clarity: e.target.value}})} />
+
+              <div className="md:col-span-2 flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCreating(false);
+                    setEditing(null);
+                    resetForm();
+                  }}
+                  className="px-6"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveProduct}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg px-6"
+                >
+                  {loading ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                  )}
+                  {editing ? "Update Product" : "Create Product"}
+                </Button>
               </div>
-              <div>
-                <Label>Cut</Label>
-                <Input value={form.specifications.cut} onChange={(e) => setForm({...form, specifications: {...form.specifications, cut: e.target.value}})} />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Certification</Label>
-                <Input value={form.specifications.certification} onChange={(e) => setForm({...form, specifications: {...form.specifications, certification: e.target.value}})} />
-              </div>
-              {error && <p className="text-sm text-red-600 md:col-span-2">{error}</p>}
-              <div className="md:col-span-2">
-                <Button type="submit">{editing ? 'Update' : 'Create'} Gem</Button>
-              </div>
-            </form>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Gems List */}
-      <Card>
-        <CardHeader><CardTitle>Gems ({gems.length})</CardTitle></CardHeader>
-        <CardContent>
-          {loading ? <p>Loading...</p> : (
-            <div className="space-y-4">
-              {gems.map((gem) => (
-                <div key={gem._id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{gem.name}</h3>
-                        <Badge variant={statusColors[gem.approvalStatus] as any}>{gem.approvalStatus}</Badge>
-                        <Badge variant="outline">{gem.category}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">{gem.description}</p>
-                      <div className="text-sm">
-                        <span className="font-medium">${gem.price}</span> • Stock: {gem.stock}
-                        {gem.sellerId && <span> • Seller: {gem.sellerId.firstName} {gem.sellerId.lastName}</span>}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => startEdit(gem)}>Edit</Button>
-                      {gem.approvalStatus === 'Pending' && (
-                        <>
-                          <Button size="sm" variant="default" onClick={() => approveGem(gem, 'Approved')}>Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => approveGem(gem, 'Rejected')}>Reject</Button>
-                        </>
-                      )}
-                      <Button size="sm" variant="destructive" onClick={() => deleteGem(gem)}>Delete</Button>
-                    </div>
-                  </div>
-                  {gem.images.length > 0 && (
-                    <div className="flex gap-2 mt-2">
-                      {gem.images.slice(0, 3).map((img, i) => (
-                        <img key={i} src={`/${img}`} alt="" className="w-12 h-12 object-cover rounded" />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+      {/* Filters Section */}
+      <Card className="backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-lg rounded-xl">
+        <CardContent className="p-6">
+          <div className="grid gap-4 md:grid-cols-5">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl"
+              />
             </div>
-          )}
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-11 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Categories</SelectItem>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-11 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Status</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+                <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                <SelectItem value="Low Stock">Low Stock</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={priceRange} onValueChange={setPriceRange}>
+              <SelectTrigger className="h-11 bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-xl">
+                <SelectValue placeholder="Price Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Prices</SelectItem>
+                <SelectItem value="Under $1000">Under $1,000</SelectItem>
+                <SelectItem value="$1000-$5000">$1,000 - $5,000</SelectItem>
+                <SelectItem value="$5000-$10000">$5,000 - $10,000</SelectItem>
+                <SelectItem value="Over $10000">Over $10,000</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setCategoryFilter("All");
+                setStatusFilter("All");
+                setPriceRange("All");
+              }}
+              variant="outline"
+              className="h-11 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredProducts.map((product, index) => (
+          <Card
+            key={product.id}
+            className="group backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-lg hover:shadow-2xl rounded-xl overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2"
+            style={{
+              animationDelay: `${index * 0.1}s`,
+              animation: mounted ? "fadeInUp 0.6s ease-out forwards" : "none",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-purple-50/50 dark:from-slate-800/50 dark:to-slate-700/50"></div>
+
+            {/* Product Image */}
+            <div className="relative h-48 overflow-hidden">
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop";
+                }}
+              />
+              <div className="absolute top-3 right-3 flex flex-col space-y-2">
+                <Badge
+                  className={`bg-gradient-to-r ${
+                    product.active
+                      ? "from-emerald-500 to-teal-500"
+                      : "from-red-500 to-pink-500"
+                  } text-white border-0 text-xs`}
+                >
+                  {product.active ? "Active" : "Inactive"}
+                </Badge>
+                <Badge
+                  className={`bg-gradient-to-r ${getStockBadgeColor(
+                    product.stock_quantity
+                  )} text-white border-0 text-xs`}
+                >
+                  {getStockStatus(product.stock_quantity)}
+                </Badge>
+              </div>
+              <div className="absolute top-3 left-3">
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs">
+                  {product.category}
+                </Badge>
+              </div>
+            </div>
+
+            <CardContent className="relative z-10 p-4">
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800 dark:text-white line-clamp-1">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mt-1">
+                    {product.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {formatPrice(product.price)}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Stock: {product.stock_quantity}
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-400 flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Created {new Date(product.created_at).toLocaleDateString()}
+                </div>
+
+                {/* Actions */}
+                <div className="flex space-x-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => startEdit(product)}
+                    className="flex-1 h-8 text-xs border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  >
+                    <Edit3 className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleActive(product)}
+                    className="h-8 text-xs border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  >
+                    {product.active ? (
+                      <EyeOff className="h-3 w-3" />
+                    ) : (
+                      <Eye className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteProduct(product)}
+                    className="h-8 text-xs bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 border-0"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredProducts.length === 0 && (
+        <Card className="backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-lg rounded-xl">
+          <CardContent className="py-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700 rounded-full flex items-center justify-center">
+              <Gem className="h-8 w-8 text-slate-500 dark:text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              {products.length === 0
+                ? "No Products Found"
+                : "No Products Match Your Filters"}
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-4">
+              {products.length === 0
+                ? "Start building your gem collection by adding your first product."
+                : "Try adjusting your search criteria or filters to find more products."}
+            </p>
+            {products.length === 0 && (
+              <Button
+                onClick={() => {
+                  setCreating(true);
+                  setEditing(null);
+                  resetForm();
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Product
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl text-center">
+            <RefreshCw className="h-8 w-8 animate-spin text-purple-500 mx-auto mb-4" />
+            <p className="text-slate-700 dark:text-slate-300">Processing...</p>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .admin-products-page {
+          font-size: 1.6rem;
+        }
+
+        .admin-products-page * {
+          font-size: inherit;
+        }
+
+        .admin-products-page .text-xs {
+          font-size: 1.2rem;
+        }
+        .admin-products-page .text-sm {
+          font-size: 1.4rem;
+        }
+        .admin-products-page .text-base {
+          font-size: 1.6rem;
+        }
+        .admin-products-page .text-lg {
+          font-size: 1.8rem;
+        }
+        .admin-products-page .text-xl {
+          font-size: 2rem;
+        }
+        .admin-products-page .text-2xl {
+          font-size: 2.4rem;
+        }
+        .admin-products-page .text-3xl {
+          font-size: 3rem;
+        }
+
+        .line-clamp-1 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+        }
+
+        .line-clamp-2 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
-  </div>
   );
 }

@@ -7,19 +7,11 @@
 @custom-variant dark (&:is(.dark *));
 html {
   font-size: 62.5%;
+  scroll-behavior: smooth;
   /* added this to match with the figma design */
-}
-.admin-page {
-  font-size: 100%;
 }
 
 :root {
-  /* --glass-gradient: linear-gradient(
-    135deg,
-    rgba(118, 104, 132, 0.3) 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  ); */
-
   --font-sans: "Playfair Display SC", serif;
   --font-mono: "Nunito", sans-serif;
   --radius: 0.625rem;

@@ -1,4 +1,20 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  CreditCard,
+  Shield,
+  Check,
+  Lock,
+  Crown,
+  Sparkles,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  Calendar,
+  Loader2,
+} from "lucide-react";
 import { CartItem, BillingDetails } from "../types";
 import { supabase } from "../lib/supabase";
 
@@ -19,6 +35,10 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
     country: "Sri Lanka",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [completedFields, setCompletedFields] = useState<Set<string>>(
+    new Set()
+  );
 
   const total = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -30,6 +50,17 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
   ) => {
     const { name, value } = e.target;
     setBillingDetails((prev) => ({ ...prev, [name]: value }));
+
+    // Mark field as completed if it has value
+    if (value.trim()) {
+      setCompletedFields((prev) => new Set([...prev, name]));
+    } else {
+      setCompletedFields((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(name);
+        return newSet;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,9 +97,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
       if (itemsError) throw itemsError;
 
       // Simulate PayHere payment integration
-      // In production, you would integrate with PayHere API here
       setTimeout(() => {
-        // Update payment status
         supabase
           .from("orders")
           .update({
@@ -81,7 +110,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
         alert("Payment successful! Order has been placed.");
         onOrderComplete();
         setIsProcessing(false);
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error("Error processing order:", error);
       alert("Failed to process order. Please try again.");
@@ -89,183 +118,540 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
     }
   };
 
+  const getFieldIcon = (fieldName: string) => {
+    const iconMap = {
+      firstName: User,
+      lastName: User,
+      email: Mail,
+      phone: Phone,
+      address: MapPin,
+      city: MapPin,
+      postalCode: MapPin,
+      country: Globe,
+    };
+    return iconMap[fieldName as keyof typeof iconMap] || User;
+  };
+
   return (
-    <div className="max-w-[168em] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">
-        Checkout
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+      {/* Enhanced background elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <motion.div
+          className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-amber-400/8 to-orange-500/8 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 40, 0],
+            y: [0, -30, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-l from-purple-400/8 to-pink-500/8 rounded-full blur-2xl"
+          animate={{
+            scale: [1, 0.8, 1],
+            x: [0, -30, 0],
+            y: [0, 40, 0],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Billing Form */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-            Billing Details
-          </h2>
+        {/* Floating particles */}
+        {[15, 35, 55, 75, 25, 45, 65, 85].map((left, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+            style={{
+              left: `${left}%`,
+              top: `${(i * 25) % 100}%`,
+            }}
+            animate={{
+              y: [0, -60, 0],
+              opacity: [0, 1, 0],
+              scale: [0, 1, 0],
+            }}
+            transition={{
+              duration: (i % 2) + 3,
+              repeat: Infinity,
+              delay: (i % 3) * 0.5,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-lg font-semibold text-white/80 mb-1">
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={billingDetails.firstName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-semibold text-white/80 mb-1">
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={billingDetails.lastName}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-lg font-semibold text-white/80 mb-1">
-                Email *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={billingDetails.email}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-semibold text-white/80 mb-1">
-                Phone *
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={billingDetails.phone}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-semibold text-white/80 mb-1">
-                Address *
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={billingDetails.address}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-lg font-semibold text-white/80 mb-1">
-                  City *
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={billingDetails.city}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-semibold text-white/80 mb-1">
-                  Postal Code *
-                </label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={billingDetails.postalCode}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-lg font-semibold text-white/80 mb-1">
-                Country *
-              </label>
-              <select
-                name="country"
-                value={billingDetails.country}
-                onChange={handleInputChange}
-                required
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-3 text-lg text-white focus:outline-none focus:border-yellow-400"
-              >
-                <option value="Sri Lanka">Sri Lanka</option>
-                <option value="India">India</option>
-                <option value="Maldives">Maldives</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-black py-4 rounded-lg font-bold text-2xl hover:from-yellow-400 hover:to-yellow-500 transition-all duration-300 disabled:opacity-50"
-            >
-              {isProcessing
-                ? "Processing..."
-                : `Pay with PayHere - $${total.toFixed(2)}`}
-            </button>
-          </form>
-        </div>
+      <div className="relative z-10 max-w-[168em] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Enhanced Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12 relative"
+        >
+          <motion.div
+            className="absolute -top-6 left-1/2 transform -translate-x-1/2"
+            animate={{
+              rotate: [0, 360],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          >
+            <Crown size={28} className="text-amber-400 opacity-60" />
+          </motion.div>
 
-        {/* Order Summary */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-            Order Summary
-          </h2>
-          <div className="space-y-6">
-            {items.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={item.product.image_url}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  <div>
-                    <p className="text-xl font-semibold text-white">
-                      {item.product.name}
-                    </p>
-                    <p className="text-white/60 text-lg">
-                      Qty: {item.quantity}
-                    </p>
-                  </div>
+          <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-white via-amber-200 to-orange-300 bg-clip-text text-transparent mb-4">
+            Secure Checkout
+          </h1>
+
+          <div className="flex items-center justify-center gap-2 text-slate-300">
+            <Shield className="w-5 h-5 text-green-400" />
+            <span className="text-lg">256-bit SSL Encrypted</span>
+          </div>
+
+          <div className="w-32 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mt-6 rounded-full" />
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Enhanced Billing Form */}
+          <motion.div
+            className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          >
+            {/* Subtle shimmer effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/3 to-transparent"
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                repeatDelay: 4,
+                ease: "easeInOut",
+              }}
+            />
+
+            <div className="relative z-10">
+              <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-amber-200 bg-clip-text text-transparent mb-8 flex items-center gap-3">
+                <User className="w-8 h-8 text-amber-400" />
+                Billing Details
+              </h2>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  {["firstName", "lastName"].map((field) => {
+                    const IconComponent = getFieldIcon(field);
+                    return (
+                      <motion.div
+                        key={field}
+                        className="relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                          <IconComponent size={16} className="text-amber-400" />
+                          {field === "firstName" ? "First Name" : "Last Name"} *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name={field}
+                            value={
+                              billingDetails[
+                                field as keyof BillingDetails
+                              ] as string
+                            }
+                            onChange={handleInputChange}
+                            onFocus={() => setFocusedField(field)}
+                            onBlur={() => setFocusedField(null)}
+                            required
+                            className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
+                              focusedField === field
+                                ? "border-amber-400 bg-white/15"
+                                : completedFields.has(field)
+                                ? "border-green-400/50"
+                                : "border-white/20 hover:border-white/30"
+                            }`}
+                            placeholder={field === "firstName" ? "John" : "Doe"}
+                          />
+
+                          {/* Field completion indicator */}
+                          <AnimatePresence>
+                            {completedFields.has(field) && (
+                              <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                exit={{ scale: 0, rotate: 180 }}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                              >
+                                <Check size={16} className="text-green-400" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
-                <p className="text-2xl font-bold text-yellow-400">
-                  ${(item.product.price * item.quantity).toFixed(2)}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-white/10 mt-8 pt-6">
-            <div className="flex items-center justify-between text-2xl">
-              <span className="font-bold text-white">Total:</span>
-              <span className="font-bold text-yellow-400">
-                ${total.toFixed(2)}
-              </span>
+
+                {/* Email and Phone */}
+                {["email", "phone"].map((field) => {
+                  const IconComponent = getFieldIcon(field);
+                  return (
+                    <motion.div
+                      key={field}
+                      className="relative"
+                      whileHover={{ scale: 1.01 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                        <IconComponent size={16} className="text-amber-400" />
+                        {field === "email" ? "Email Address" : "Phone Number"} *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={field === "email" ? "email" : "tel"}
+                          name={field}
+                          value={
+                            billingDetails[
+                              field as keyof BillingDetails
+                            ] as string
+                          }
+                          onChange={handleInputChange}
+                          onFocus={() => setFocusedField(field)}
+                          onBlur={() => setFocusedField(null)}
+                          required
+                          className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
+                            focusedField === field
+                              ? "border-amber-400 bg-white/15"
+                              : completedFields.has(field)
+                              ? "border-green-400/50"
+                              : "border-white/20 hover:border-white/30"
+                          }`}
+                          placeholder={
+                            field === "email"
+                              ? "john@example.com"
+                              : "+94 77 123 4567"
+                          }
+                        />
+
+                        <AnimatePresence>
+                          {completedFields.has(field) && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, rotate: 180 }}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                            >
+                              <Check size={16} className="text-green-400" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+
+                {/* Address */}
+                <motion.div
+                  className="relative"
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                    <MapPin size={16} className="text-amber-400" />
+                    Street Address *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="address"
+                      value={billingDetails.address}
+                      onChange={handleInputChange}
+                      onFocus={() => setFocusedField("address")}
+                      onBlur={() => setFocusedField(null)}
+                      required
+                      className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
+                        focusedField === "address"
+                          ? "border-amber-400 bg-white/15"
+                          : completedFields.has("address")
+                          ? "border-green-400/50"
+                          : "border-white/20 hover:border-white/30"
+                      }`}
+                      placeholder="123 Main Street"
+                    />
+
+                    <AnimatePresence>
+                      {completedFields.has("address") && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          exit={{ scale: 0, rotate: 180 }}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        >
+                          <Check size={16} className="text-green-400" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+
+                {/* City, Postal Code, Country */}
+                <div className="grid grid-cols-3 gap-4">
+                  {["city", "postalCode"].map((field) => (
+                    <motion.div
+                      key={field}
+                      className="relative"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                        <MapPin size={16} className="text-amber-400" />
+                        {field === "city" ? "City" : "Postal Code"} *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name={field}
+                          value={
+                            billingDetails[
+                              field as keyof BillingDetails
+                            ] as string
+                          }
+                          onChange={handleInputChange}
+                          onFocus={() => setFocusedField(field)}
+                          onBlur={() => setFocusedField(null)}
+                          required
+                          className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
+                            focusedField === field
+                              ? "border-amber-400 bg-white/15"
+                              : completedFields.has(field)
+                              ? "border-green-400/50"
+                              : "border-white/20 hover:border-white/30"
+                          }`}
+                          placeholder={field === "city" ? "Colombo" : "10100"}
+                        />
+
+                        <AnimatePresence>
+                          {completedFields.has(field) && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, rotate: 180 }}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                            >
+                              <Check size={16} className="text-green-400" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+                      <Globe size={16} className="text-amber-400" />
+                      Country *
+                    </label>
+                    <select
+                      name="country"
+                      value={billingDetails.country}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full bg-white/10 border-2 border-white/20 hover:border-white/30 focus:border-amber-400 rounded-xl px-4 py-3 text-base text-white focus:outline-none transition-all duration-300"
+                    >
+                      <option value="Sri Lanka">Sri Lanka</option>
+                      <option value="India">India</option>
+                      <option value="Maldives">Maldives</option>
+                    </select>
+                  </motion.div>
+                </div>
+
+                {/* Submit Button */}
+                <motion.button
+                  type="submit"
+                  disabled={isProcessing}
+                  className="w-full relative bg-gradient-to-r from-amber-500 to-orange-600 text-black py-5 rounded-2xl font-bold text-xl hover:from-amber-400 hover:to-orange-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl overflow-hidden"
+                  whileHover={!isProcessing ? { scale: 1.02, y: -2 } : {}}
+                  whileTap={!isProcessing ? { scale: 0.98 } : {}}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 hover:opacity-30 transition-opacity" />
+
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-6 h-6" />
+                        Pay with PayHere - ${total.toFixed(2)}
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+
+                {/* Security Notice */}
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mt-4">
+                  <Shield className="w-4 h-4 text-green-400" />
+                  <span>
+                    Your payment information is secured with SSL encryption
+                  </span>
+                </div>
+              </form>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Enhanced Order Summary */}
+          <motion.div
+            className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl relative overflow-hidden h-fit"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            {/* Background decoration */}
+            <div className="absolute top-6 right-6">
+              <motion.div
+                animate={{
+                  rotate: [0, 360],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                <Sparkles size={24} className="text-amber-400 opacity-40" />
+              </motion.div>
+            </div>
+
+            <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white to-amber-200 bg-clip-text text-transparent mb-8 flex items-center gap-3">
+              <CreditCard className="w-8 h-8 text-amber-400" />
+              Order Summary
+            </h2>
+
+            <div className="space-y-6">
+              <AnimatePresence>
+                {items.map((item, index) => (
+                  <motion.div
+                    key={item.product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: 100 }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                    className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 group"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <motion.div
+                        className="relative"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <img
+                          src={item.product.image_url}
+                          alt={item.product.name}
+                          className="w-16 h-16 object-cover rounded-xl shadow-lg border-2 border-white/20"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity blur" />
+                      </motion.div>
+
+                      <div>
+                        <p className="text-lg font-semibold text-white group-hover:text-amber-200 transition-colors">
+                          {item.product.name}
+                        </p>
+                        <p className="text-slate-400 text-sm flex items-center gap-2">
+                          <span>Qty: {item.quantity}</span>
+                          <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
+                          <span>${item.product.price.toFixed(2)} each</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <motion.p
+                      className="text-xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      ${(item.product.price * item.quantity).toFixed(2)}
+                    </motion.p>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Total Section */}
+            <div className="border-t border-white/20 mt-8 pt-8">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Subtotal:</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Shipping:</span>
+                  <span className="text-green-400">Free</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Tax:</span>
+                  <span>Included</span>
+                </div>
+              </div>
+
+              <motion.div
+                className="flex items-center justify-between text-2xl md:text-3xl border-t border-white/20 pt-6 mt-6"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                <span className="font-bold text-white">Total:</span>
+                <motion.span
+                  className="font-black bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 bg-clip-text text-transparent"
+                  animate={{
+                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  ${total.toFixed(2)}
+                </motion.span>
+              </motion.div>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3">
+                Accepted Payment Methods:
+              </h3>
+              <div className="flex items-center gap-3">
+                <div className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-lg text-xs font-medium">
+                  PayHere
+                </div>
+                <div className="px-3 py-1 bg-green-600/20 text-green-300 rounded-lg text-xs font-medium">
+                  Visa
+                </div>
+                <div className="px-3 py-1 bg-purple-600/20 text-purple-300 rounded-lg text-xs font-medium">
+                  Mastercard
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
