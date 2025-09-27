@@ -9,6 +9,9 @@ html {
   font-size: 62.5%;
   /* added this to match with the figma design */
 }
+.admin-page {
+  font-size: 100%;
+}
 
 :root {
   /* --glass-gradient: linear-gradient(

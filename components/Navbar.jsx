@@ -29,12 +29,11 @@ function Navbar() {
   const navItems = [
     { name: "Home", href: "/", icon: <Crown size={16} /> },
     {
-      name: "Engagement Rings",
-      href: "/engagement",
+      name: "Products",
+      href: "/collection",
       icon: <Diamond size={16} />,
     },
-    { name: "Wedding Rings", href: "/wedding", icon: <Sparkles size={16} /> },
-    { name: "Academy", href: "/academy", icon: <Diamond size={16} /> },
+    { name: "Academy", href: "/academy", icon: <Sparkles size={16} /> },
     { name: "About", href: "/about", icon: <Crown size={16} /> },
   ];
 
