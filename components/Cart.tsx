@@ -50,7 +50,7 @@ const Cart: React.FC<CartProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden ">
         {/* Animated background elements */}
         <div className="absolute inset-0 pointer-events-none">
           <motion.div
@@ -171,7 +171,7 @@ const Cart: React.FC<CartProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 relative overflow-hidden  lg:h-screen lg:snap-start flex items-center">
       {/* Enhanced background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div

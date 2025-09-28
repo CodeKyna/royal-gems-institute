@@ -182,7 +182,7 @@ function page() {
 
       <div className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth hide-scrollbar relative z-10">
         {/* Enhanced Hero Section */}
-        <section className="max-w-[164em] mx-auto flex items-start flex-col min-h-screen py-2 pt-[220px] snap-start relative">
+        <section className="max-w-[164em] mx-auto flex items-center flex-col min-h-screen py-2  snap-start relative pt-40">
           {/* Floating shopping cart */}
           <motion.div
             className="fixed bottom-8 right-8 z-50"
@@ -489,7 +489,7 @@ function page() {
 
         {/* Enhanced Collections Section */}
         <section
-          className="min-h-screen snap-start pt-[220px] relative"
+          className="min-h-screen snap-start relative lg:h-screen pt-40"
           id="collections-section"
         >
           <div className="flex-1">
@@ -547,7 +547,7 @@ function page() {
             </AnimatePresence>
           </div>
 
-          <div className="pt-[100px]"></div>
+          <div className="pb-[400px]"></div>
         </section>
       </div>
     </div>
