@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // For login page, don't show sidebar
   if (pathname === "/admin/login") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 border-2">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full animate-pulse"></div>
           <div
@@ -122,7 +122,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             style={{ animationDuration: "3s" }}
           ></div>
         </div>
-        <div className="relative z-10 w-full max-w-md transform scale-110">
+        <div className="relative z-10 w-full max-w-md lg:max-w-dvw transform scale-110">
           {children}
         </div>
       </div>
