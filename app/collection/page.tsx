@@ -26,6 +26,7 @@ import { supabase } from "@/lib/supabase";
 import Cart from "@/components/Cart";
 import { dummyProducts } from "@/lib/data";
 import Checkout from "@/components/Checkout";
+import { getProducts } from "@/utils/api";
 
 function page() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,12 +41,7 @@ function page() {
   }, []);
 
   const fetchProducts = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("active", true)
-      .order("created_at", { ascending: false });
-
+    const data = await getProducts();
     if (data) setProducts(data);
     else setProducts(dummyProducts); // Fallback to dummy data
   };

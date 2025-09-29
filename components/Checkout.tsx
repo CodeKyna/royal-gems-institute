@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { CartItem, BillingDetails } from "../types";
 import { supabase } from "../lib/supabase";
+import PayHereCheckoutButton from "./PayhereCheckoutButton";
 
 interface CheckoutProps {
   items: CartItem[];
@@ -24,6 +25,20 @@ interface CheckoutProps {
 }
 
 const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
+  const checkout = {
+    order_id: "ORDER-" + Date.now(),
+    items: "Awesome T-shirt",
+    amount: 1500,
+    currency: "LKR",
+    first_name: "Kanchana",
+    last_name: "Wimalasena",
+    email: "you@example.com",
+    phone: "0771234567",
+    address: "No.1, Galle Road",
+    city: "Colombo",
+    country: "Sri Lanka",
+  };
+
   const [billingDetails, setBillingDetails] = useState<BillingDetails>({
     firstName: "",
     lastName: "",
@@ -506,6 +521,10 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
                     )}
                   </span>
                 </motion.button>
+                <div>
+                  <h1>PayHere Checkout Demo</h1>
+                  <PayHereCheckoutButton checkout={checkout} />
+                </div>
 
                 {/* Security Notice */}
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mt-4">

@@ -608,6 +608,7 @@ import ExclusiveCard, { ExclusiveContent } from "@/components/ExclusiveCard";
 import ITemDisplayCard from "@/components/ITemDisplayCard";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Footer from "@/components/FooterPage";
 
 function Page() {
   const [exclusiveContent, setExclusiveContent] = useState<ExclusiveContent[]>([
@@ -1049,6 +1050,7 @@ function Page() {
           </section>
         </motion.section>
       </div>
+      <Footer />
     </div>
   );
 }

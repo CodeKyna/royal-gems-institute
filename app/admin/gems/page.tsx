@@ -64,6 +64,9 @@ const CATEGORIES = [
   "Tourmaline",
 ];
 
+//api calls
+import { createProduct, getProducts } from "@/utils/api";
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([
     {
@@ -142,6 +145,16 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setMounted(true);
+
+    async function fetchProducts() {
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error from fetch products - ", error);
+      }
+    }
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -248,10 +261,19 @@ export default function ProductsPage() {
       } else {
         // Create new product
         const newProduct: Product = {
-          id: Date.now().toString(),
+          id: "RGP-" + Date.now().toString(),
           ...form,
           created_at: new Date().toISOString(),
         };
+
+        const { id, created_at, ...rest } = newProduct;
+        try {
+          const res = createProduct(rest);
+          console.log("Product response from the backend :", res);
+        } catch (error) {
+          console.log(error);
+        }
+
         setProducts((prev) => [newProduct, ...prev]);
         setCreating(false);
       }
