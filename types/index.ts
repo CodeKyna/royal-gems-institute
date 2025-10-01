@@ -45,3 +45,37 @@ export interface Order {
   created_at: string;
   order_items?: OrderItem[];
 }
+
+export type CheckoutRequest = {
+  order_id: string;
+  items: string;
+  amount: number;
+  currency?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+};
+
+export interface PayHereFields {
+  merchant_id: string;
+  return_url: string;
+  cancel_url: string;
+  notify_url: string;
+  order_id: string;
+  items: string;
+  currency: string;
+  amount: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  hash: string;
+  [key: string]: string; // Allow additional fields
+}
