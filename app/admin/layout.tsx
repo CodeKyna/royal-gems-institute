@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -48,37 +49,61 @@ const mockNavigation = [
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    role: "SuperAdmin",
-  });
+  const [user, setUser] = useState<User | null>();
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const pathname =
-    typeof window !== "undefined" ? window.location.pathname : "/admin";
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const checkAuth = useCallback(async () => {
-    // Mock authentication check
-    setLoading(false);
-  }, []);
-
+    try {
+      const res = await fetch("/api/auth/profile", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+        // If not on login page and not authenticated, redirect to login
+        if (pathname !== "/admin/login") {
+          router.push("/admin/login?reason=unauthenticated");
+        }
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [pathname, router]);
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   async function handleLogout() {
     setLoading(true);
-    // Mock logout
-    setTimeout(() => {
+    const csrfToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrfToken="))
+      ?.split("=")[1];
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
+        credentials: "include",
+      });
       setUser(null);
       setLoading(false);
-    }, 1000);
+      router.push("/admin/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   }
 
   if (!mounted) {
@@ -182,7 +207,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 {user && (
                   <div className="hidden md:flex items-center space-x-3 px-4 py-2 bg-white/60 dark:bg-slate-700/60 rounded-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50">
                     <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {user.firstName.charAt(0)}
+                      {user.firstName}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -247,7 +272,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="mb-8 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl border border-indigo-200/50 dark:border-indigo-700/50">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                      {user.firstName.charAt(0)}
+                      {user.firstName}
                     </div>
                     <div>
                       <p className="font-semibold text-slate-800 dark:text-white">

@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { authenticate } from '@/lib/security/middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { authenticate } from "@/lib/security/middleware";
 
 export async function GET(request: NextRequest) {
   const { user } = await authenticate(request);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  console.log("user is", user);
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   return NextResponse.json({
     user: {
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      isActive: user.isActive
-    }
+      isActive: user.isActive,
+    },
   });
 }

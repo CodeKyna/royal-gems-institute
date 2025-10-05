@@ -1,44 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import User from '@/lib/models/User';
-import { verifyPassword, generateTokens, verify2FAToken, generateCSRFToken } from '@/lib/security/auth';
-import { logAction, isRateLimited, generateSessionId } from '@/lib/security/middleware';
+import { NextRequest, NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
+import User from "@/lib/models/User";
+import {
+  verifyPassword,
+  generateTokens,
+  verify2FAToken,
+  generateCSRFToken,
+} from "@/lib/security/auth";
+import {
+  logAction,
+  isRateLimited,
+  generateSessionId,
+} from "@/lib/security/middleware";
 
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
-    
+
     const { email, password, twoFactorToken } = await request.json();
-    
+
     // Rate limiting for login attempts
-    const rateLimitKey = `rate_limit:login:${request.headers.get('x-forwarded-for') || 'unknown'}`;
-    
-    if (await isRateLimited(rateLimitKey, 5, 15 * 60 * 1000)) { // 5 attempts per 15 minutes
+    const rateLimitKey = `rate_limit:login:${
+      request.headers.get("x-forwarded-for") || "unknown"
+    }`;
+
+    if (await isRateLimited(rateLimitKey, 5, 15 * 60 * 1000)) {
+      // 5 attempts per 15 minutes
       return NextResponse.json(
-        { error: 'Too many login attempts. Please try again later.' },
+        { error: "Too many login attempts. Please try again later." },
         { status: 429 }
       );
     }
 
     // Find user and include sensitive fields for authentication
-    const user = await User.findOne({ email: email.toLowerCase() })
-      .select('+password +twoFactorSecret');
+    const user = await User.findOne({ email: email.toLowerCase() }).select(
+      "+password +twoFactorSecret"
+    );
 
     if (!user || !user.isActive) {
       await logAction(
-        'unknown',
+        "unknown",
         email,
-        'LOGIN_FAILED',
-        'auth',
+        "LOGIN_FAILED",
+        "auth",
         undefined,
-        { reason: 'Invalid credentials' },
+        { reason: "Invalid credentials" },
         request,
         false,
-        'Invalid email or user inactive'
+        "Invalid email or user inactive"
       );
-      
+
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: "Invalid email or password" },
         { status: 401 }
       );
     }
@@ -48,17 +61,20 @@ export async function POST(request: NextRequest) {
       await logAction(
         user._id.toString(),
         user.email,
-        'LOGIN_FAILED',
-        'auth',
+        "LOGIN_FAILED",
+        "auth",
         undefined,
-        { reason: 'Account locked' },
+        { reason: "Account locked" },
         request,
         false,
-        'Account is locked due to multiple failed attempts'
+        "Account is locked due to multiple failed attempts"
       );
-      
+
       return NextResponse.json(
-        { error: 'Account is temporarily locked due to multiple failed login attempts' },
+        {
+          error:
+            "Account is temporarily locked due to multiple failed login attempts",
+        },
         { status: 423 }
       );
     }
@@ -68,28 +84,28 @@ export async function POST(request: NextRequest) {
     if (!isValidPassword) {
       // Increment login attempts
       user.loginAttempts = (user.loginAttempts || 0) + 1;
-      
+
       // Lock account after 5 failed attempts
       if (user.loginAttempts >= 5) {
         user.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // Lock for 30 minutes
       }
-      
+
       await user.save();
-      
+
       await logAction(
         user._id.toString(),
         user.email,
-        'LOGIN_FAILED',
-        'auth',
+        "LOGIN_FAILED",
+        "auth",
         undefined,
-        { reason: 'Invalid password', attempts: user.loginAttempts },
+        { reason: "Invalid password", attempts: user.loginAttempts },
         request,
         false,
-        'Invalid password'
+        "Invalid password"
       );
-      
+
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: "Invalid email or password" },
         { status: 401 }
       );
     }
@@ -98,7 +114,10 @@ export async function POST(request: NextRequest) {
     if (user.twoFactorEnabled) {
       if (!twoFactorToken) {
         return NextResponse.json(
-          { error: 'Two-factor authentication token required', requires2FA: true },
+          {
+            error: "Two-factor authentication token required",
+            requires2FA: true,
+          },
           { status: 200 }
         );
       }
@@ -108,38 +127,38 @@ export async function POST(request: NextRequest) {
         await logAction(
           user._id.toString(),
           user.email,
-          'LOGIN_FAILED',
-          'auth',
+          "LOGIN_FAILED",
+          "auth",
           undefined,
-          { reason: 'Invalid 2FA token' },
+          { reason: "Invalid 2FA token" },
           request,
           false,
-          'Invalid 2FA token'
+          "Invalid 2FA token"
         );
-        
+
         return NextResponse.json(
-          { error: 'Invalid two-factor authentication token' },
+          { error: "Invalid two-factor authentication token" },
           { status: 401 }
         );
       }
     }
 
     // Check if user has admin privileges
-    if (!['SuperAdmin', 'Admin', 'Moderator'].includes(user.role)) {
+    if (!["SuperAdmin", "Admin", "Moderator"].includes(user.role)) {
       await logAction(
         user._id.toString(),
         user.email,
-        'LOGIN_FAILED',
-        'auth',
+        "LOGIN_FAILED",
+        "auth",
         undefined,
-        { reason: 'Insufficient privileges' },
+        { reason: "Insufficient privileges" },
         request,
         false,
-        'User does not have admin privileges'
+        "User does not have admin privileges"
       );
-      
+
       return NextResponse.json(
-        { error: 'Access denied. Insufficient privileges.' },
+        { error: "Access denied. Insufficient privileges." },
         { status: 403 }
       );
     }
@@ -152,10 +171,12 @@ export async function POST(request: NextRequest) {
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens({
+      firstName: user.firstName,
+      lastName: user.lastName,
       id: user._id.toString(),
       email: user.email,
       role: user.role,
-      twoFactorEnabled: user.twoFactorEnabled
+      twoFactorEnabled: user.twoFactorEnabled,
     });
 
     // Generate CSRF token and session ID
@@ -166,8 +187,8 @@ export async function POST(request: NextRequest) {
     await logAction(
       user._id.toString(),
       user.email,
-      'LOGIN',
-      'auth',
+      "LOGIN",
+      "auth",
       undefined,
       { role: user.role, twoFactorUsed: user.twoFactorEnabled },
       request,
@@ -183,52 +204,51 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        twoFactorEnabled: user.twoFactorEnabled
-      }
+        twoFactorEnabled: user.twoFactorEnabled,
+      },
     });
 
     // Set cookies with security flags
-    response.cookies.set('accessToken', accessToken, {
+    response.cookies.set("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 // 15 minutes
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60, // 15 minutes
     });
 
-    response.cookies.set('refreshToken', refreshToken, {
+    response.cookies.set("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    response.cookies.set('csrfToken', csrfToken, {
+    response.cookies.set("csrfToken", csrfToken, {
       httpOnly: false, // Accessible to JavaScript for CSRF protection
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60, // 24 hours
     });
 
-    response.cookies.set('sessionId', sessionId, {
+    response.cookies.set("sessionId", sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60, // 24 hours
     });
 
-    response.cookies.set('lastActivity', Date.now().toString(), {
+    response.cookies.set("lastActivity", Date.now().toString(), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60, // 24 hours
     });
 
     return response;
-
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
