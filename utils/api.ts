@@ -7,6 +7,8 @@ const API_BASE_URL =
 
 // ✅ Products
 export async function getProducts(): Promise<Product[]> {
+  console.log("current base url", API_BASE_URL);
+
   const res: AxiosResponse<Product[]> = await axios.get(
     `${API_BASE_URL}/products`
   );
