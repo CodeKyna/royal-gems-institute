@@ -1,25 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import React from "react";
 import Image from "next/image";
 import Button from "@mui/material/Button";
 import { motion, AnimatePresence } from "framer-motion";
 
-import {
-  ShoppingCart,
-  User,
-  Package,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  Sparkles,
-  Crown,
-  Diamond,
-  Star,
-  Heart,
-} from "lucide-react";
+import { ShoppingCart, Sparkles, Crown, Diamond, Star } from "lucide-react";
 import CollectionPage from "@/components/CollectionPage";
 import { CartItem, Product, Order } from "../../types";
 import Cart from "@/components/Cart";
@@ -27,13 +13,12 @@ import { dummyProducts } from "@/lib/data";
 import Checkout from "@/components/Checkout";
 import { getProducts } from "@/utils/api";
 
-function page() {
-  const [searchTerm, setSearchTerm] = useState("");
+function Page() {
+  // const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState("collection");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  // const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     fetchProducts();
@@ -294,7 +279,7 @@ function page() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.6 }}
               >
-                This Month's Highlight
+                This Month&apos;s Highlight
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-amber-400/10 to-transparent blur-lg -z-10 rounded-lg"
                   animate={{
@@ -322,7 +307,8 @@ function page() {
                 <p className="font-mono text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed">
                   Available for a limited time, this exclusive design embodies
                   the artistry and authenticity of the Royal Gems Institute.
-                  Don't miss the chance to own a true collector's piece.
+                  Don&apos;t miss the chance to own a true collector&apos;s
+                  piece.
                 </p>
               </motion.div>
 
@@ -441,7 +427,7 @@ function page() {
                       ))}
                     </div>
                     <h3 className="text-white font-bold text-lg">
-                      Lion's Heart Necklace
+                      Lion&apos;s Heart Necklace
                     </h3>
                     <p className="text-slate-300 text-sm">
                       Limited Edition Masterpiece
@@ -472,7 +458,7 @@ function page() {
         >
           <div className="flex-1">
             <AnimatePresence mode="wait">
-              {currentPage === "collection" && !isAdmin && (
+              {currentPage === "collection" && (
                 <motion.section
                   key="collection"
                   id="exquisite-collection-section"
@@ -486,7 +472,7 @@ function page() {
                 </motion.section>
               )}
 
-              {currentPage === "cart" && !isAdmin && (
+              {currentPage === "cart" && (
                 <motion.div
                   key="cart"
                   initial={{ opacity: 0, x: 100 }}
@@ -504,7 +490,7 @@ function page() {
                 </motion.div>
               )}
 
-              {currentPage === "checkout" && !isAdmin && (
+              {currentPage === "checkout" && (
                 <motion.div
                   key="checkout"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -532,4 +518,4 @@ function page() {
   );
 }
 
-export default page;
+export default Page;

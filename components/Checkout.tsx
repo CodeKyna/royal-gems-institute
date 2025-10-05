@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditCard,
@@ -15,7 +15,6 @@ import {
 import { CartItem, BillingDetails, Order, OrderItem } from "../types";
 import { createOrder } from "@/utils/api";
 import PayHereCheckoutButton from "./PayhereCheckoutButton";
-import ProductsPage from "@/app/admin/gems/page";
 
 interface CheckoutProps {
   items: CartItem[];

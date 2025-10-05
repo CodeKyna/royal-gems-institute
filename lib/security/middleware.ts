@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./auth";
 import AuditLog from "../models/AuditLog";
 import dbConnect from "../db";
+import crypto from "crypto";
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -170,6 +171,5 @@ export const isAccountLocked = (
 
 // Generate secure session ID
 export const generateSessionId = (): string => {
-  const crypto = require("crypto");
   return crypto.randomBytes(32).toString("hex");
 };

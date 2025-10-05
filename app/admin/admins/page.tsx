@@ -32,7 +32,6 @@ import {
   RefreshCw,
   Lock,
   Calendar,
-  Activity,
 } from "lucide-react";
 
 type AdminUser = {
@@ -132,8 +131,9 @@ export default function AdminsPage() {
         role: "Admin",
         password: "",
       });
-    } catch (err) {
+    } catch (error) {
       setError("Failed to create admin account");
+      console.error(error);
     } finally {
       setLoading(false);
     }

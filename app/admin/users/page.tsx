@@ -30,7 +30,6 @@ import {
   User,
   Key,
   Settings,
-  Filter,
   RefreshCw,
 } from "lucide-react";
 
@@ -109,19 +108,19 @@ export default function UsersPage() {
         setError(data.error || "Failed to load users");
       }
       // Filter users based on search query
-      const filteredUsers = users.filter(
-        (user) =>
-          user.email.toLowerCase().includes(q.toLowerCase()) ||
-          `${user.firstName} ${user.lastName}`
-            .toLowerCase()
-            .includes(q.toLowerCase())
-      );
+      // const filteredUsers = users.filter(
+      //   (user) =>
+      //     user.email.toLowerCase().includes(q.toLowerCase()) ||
+      //     `${user.firstName} ${user.lastName}`
+      //       .toLowerCase()
+      //       .includes(q.toLowerCase())
+      // );
     } catch (error) {
       console.error("Failed to load users:", error);
     } finally {
       setLoading(false);
     }
-  }, [q]);
+  }, [q, users]);
 
   useEffect(() => {
     if (mounted) load();
@@ -178,6 +177,7 @@ export default function UsersPage() {
       });
     } catch (err) {
       setError("Failed to create user");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -520,7 +520,7 @@ export default function UsersPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredUsers.map((user, index) => (
           <Card
-            key={user._id}
+            key={index}
             className="group backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-lg hover:shadow-2xl rounded-xl overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2"
             style={{
               animationDelay: `${index * 0.1}s`,

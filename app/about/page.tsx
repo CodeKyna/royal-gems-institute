@@ -4,18 +4,14 @@ import { motion } from "framer-motion";
 import {
   Crown,
   Diamond,
-  Gem,
   Award,
   Users,
   Globe,
   BookOpen,
   Shield,
-  Star,
   Sparkles,
-  TrendingUp,
   Heart,
   Target,
-  Zap,
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
@@ -222,9 +218,9 @@ const AboutPage = () => {
             className="text-1.8rem text-slate-400 max-w-4xl mx-auto leading-relaxed"
           >
             From the legendary gem mines of Ratnapura to the world stage, we are
-            Sri Lanka's premier institute for gemstones, jewelry, and
+            Sri Lanka&apos;s premier institute for gemstones, jewelry, and
             gemological education. Our legacy is built on authenticity,
-            excellence, and the timeless beauty of Earth's treasures.
+            excellence, and the timeless beauty of Earth&apos;s treasures.
           </motion.p>
         </div>
 
@@ -309,15 +305,15 @@ const AboutPage = () => {
                 />
                 <div className="relative bg-white/5 backdrop-blur-xl rounded-3xl p-12 border border-white/10">
                   <p className="text-2rem text-slate-300 leading-relaxed mb-6">
-                    Sri Lanka, known as the "Gem Island" for over 2,000 years,
-                    has been the source of some of the world's finest gemstones.
-                    In 1924, our founders established Royal Gems Institute with
-                    a vision to preserve this heritage while bringing Sri Lankan
-                    gems to the global market.
+                    Sri Lanka, known as the Gem Island for over 2,000 years, has
+                    been the source of some of the world&apos;s finest
+                    gemstones. In 1924, our founders established Royal Gems
+                    Institute with a vision to preserve this heritage while
+                    bringing Sri Lankan gems to the global market.
                   </p>
                   <p className="text-2rem text-slate-300 leading-relaxed mb-6">
                     What began as a small family business in Colombo has grown
-                    into Sri Lanka's most respected gemological institute,
+                    into Sri Lanka&apos;s most respected gemological institute,
                     serving clients and students from over 50 countries.
                   </p>
                   <p className="text-2rem text-slate-300 leading-relaxed">
@@ -506,8 +502,8 @@ const AboutPage = () => {
                 International Certifications
               </h2>
               <p className="text-2rem text-slate-300 text-center mb-12 max-w-4xl mx-auto">
-                Accredited and recognized by the world's leading gemological
-                institutions
+                Accredited and recognized by the world&apos;s leading
+                gemological institutions
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {certifications.map((cert, index) => (
@@ -559,9 +555,9 @@ const AboutPage = () => {
                 Begin Your Gemstone Journey
               </h2>
               <p className="text-2rem text-slate-300 mb-10 max-w-3xl mx-auto">
-                Whether you're looking to invest in precious gems, design custom
-                jewelry, or pursue a career in gemology, we're here to guide
-                you.
+                Whether you are looking to invest in precious gems, design
+                custom jewelry, or pursue a career in gemology, we are here to
+                guide you.
               </p>
               <div className="flex flex-wrap gap-6 justify-center">
                 <motion.button

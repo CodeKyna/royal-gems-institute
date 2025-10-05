@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen,
   Clock,
   Users,
   Award,
@@ -13,12 +12,9 @@ import {
   Crown,
   Sparkles,
   GraduationCap,
-  Calendar,
   MapPin,
   Phone,
   Mail,
-  User,
-  CheckCircle,
   Quote,
   AwardIcon,
 } from "lucide-react";
@@ -47,7 +43,7 @@ interface Testimonial {
 }
 
 const AcademyPage = () => {
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  // const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [enrollmentForm, setEnrollmentForm] = useState({
     firstName: "",
     lastName: "",
@@ -309,7 +305,7 @@ const AcademyPage = () => {
 
               <p className="text-xl md:text-2xl text-slate-300 max-w-4xl mx-auto leading-relaxed mb-12">
                 Master the ancient art and modern science of gemology in the
-                heart of Sri Lanka, the world's treasure island of precious
+                heart of Sri Lanka, the world&apos;s treasure island of precious
                 stones
               </p>
 
@@ -486,7 +482,7 @@ const AcademyPage = () => {
 
                   {/* Testimonial text */}
                   <blockquote className="text-slate-300 leading-relaxed mb-6 italic">
-                    "{testimonial.review}"
+                    {testimonial.review}
                   </blockquote>
 
                   {/* Student info */}
@@ -615,7 +611,7 @@ const AcademyPage = () => {
 
               <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
                 Join hundreds of successful graduates and become part of Sri
-                Lanka's prestigious gemstone community
+                Lanka&apos;s prestigious gemstone community
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

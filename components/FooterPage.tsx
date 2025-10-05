@@ -495,7 +495,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Clock,
   Facebook,
   Instagram,
   Twitter,
@@ -509,7 +508,6 @@ import {
   ArrowUp,
   Heart,
   Star,
-  Zap,
 } from "lucide-react";
 
 const Footer = () => {
@@ -831,9 +829,9 @@ const Footer = () => {
                   whileInView={{ opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.8 }}
                 >
-                  Sri Lanka's premier gemstone institute, blending 2000 years of
-                  heritage with world-class expertise in gems, jewelry, and
-                  education.
+                  Sri Lanka&apos;s premier gemstone institute, blending 2000
+                  years of heritage with world-class expertise in gems, jewelry,
+                  and education.
                 </motion.p>
 
                 {/* Enhanced Contact Information */}

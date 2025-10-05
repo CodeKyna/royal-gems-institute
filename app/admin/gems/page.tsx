@@ -16,7 +16,6 @@ import {
   Gem,
   Plus,
   Search,
-  Filter,
   Edit3,
   Trash2,
   Eye,
@@ -30,10 +29,6 @@ import {
   Package,
   Tag,
   Calendar,
-  Activity,
-  Star,
-  TrendingUp,
-  Archive,
   ShoppingCart,
 } from "lucide-react";
 
@@ -269,7 +264,7 @@ export default function ProductsPage() {
         const { id, created_at, ...rest } = newProduct;
         try {
           const res = createProduct(rest);
-          console.log("Product response from the backend :", res);
+          console.log("Product created", id, created_at, res);
         } catch (error) {
           console.log(error);
         }

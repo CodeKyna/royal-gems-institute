@@ -14,14 +14,14 @@ import {
   Eye,
 } from "lucide-react";
 
-interface ApiAuditLog {
-  _id: string;
-  action: string;
-  adminEmail: string;
-  resource: string;
-  timestamp: string;
-  success: boolean;
-}
+// interface ApiAuditLog {
+//   _id: string;
+//   action: string;
+//   adminEmail: string;
+//   resource: string;
+//   timestamp: string;
+//   success: boolean;
+// }
 
 interface ActivityItem {
   id: string;
@@ -180,7 +180,7 @@ export default function AdminDashboard() {
                   Dashboard
                 </h1>
                 <p className="text-slate-600 dark:text-slate-400 mt-1">
-                  Welcome back, let's see what's happening
+                  Welcome back, let&apos;s see what&apos;s happening
                 </p>
               </div>
             </div>

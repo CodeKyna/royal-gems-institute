@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -15,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   ShoppingCart,
   Search,
-  Filter,
   Eye,
   RefreshCw,
   Calendar,
@@ -25,7 +23,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  AlertTriangle,
   User,
   Mail,
   Phone,
@@ -33,12 +30,9 @@ import {
   CreditCard,
   Download,
   Edit3,
-  Archive,
-  TrendingUp,
   Globe,
-  Star,
 } from "lucide-react";
-import { getOrders, getProductById } from "@/utils/api";
+import { getOrders } from "@/utils/api";
 
 import { Order } from "@/types";
 
