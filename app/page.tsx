@@ -1,20 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import {
-  Gem,
-  ShoppingBag,
-  Sparkles,
-  Crown,
-  Diamond,
-  Star,
-  Globe,
-  CheckCircle,
-} from "lucide-react";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
+import { ShoppingBag, Sparkles, Crown, Diamond } from "lucide-react";
 import { motion } from "framer-motion";
-import ExclusiveCard, { ExclusiveContent } from "@/components/ExclusiveCard";
+import { ExclusiveContent } from "@/components/ExclusiveCard";
 import ITemDisplayCard from "@/components/ITemDisplayCard";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -344,7 +333,7 @@ function Page() {
                 Treasures of Ceylon
               </h2>
               <p className="text-xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-                For over 2000 years, Sri Lanka has been the world's premier
+                For over 2000 years, Sri Lanka has been the world&apos;s premier
                 source of the finest sapphires, rubies, and precious gemstones.
               </p>
             </motion.div>
@@ -366,7 +355,7 @@ function Page() {
                   highlight: "Legendary Stones",
                 },
                 {
-                  icon: Gem,
+                  icon: Diamond,
                   title: "Certified Authentic",
                   description:
                     "Every gem certified by international gemological institutes",
