@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import CollectionPage from "@/components/CollectionPage";
 import { CartItem, Product, Order } from "../../types";
-import { supabase } from "@/lib/supabase";
 import Cart from "@/components/Cart";
 import { dummyProducts } from "@/lib/data";
 import Checkout from "@/components/Checkout";
@@ -44,23 +43,6 @@ function page() {
     const data = await getProducts();
     if (data) setProducts(data);
     else setProducts(dummyProducts); // Fallback to dummy data
-  };
-
-  const fetchOrders = async () => {
-    const { data, error } = await supabase
-      .from("orders")
-      .select(
-        `
-        *,
-        order_items (
-          *,
-          products (*)
-        )
-      `
-      )
-      .order("created_at", { ascending: false });
-
-    if (data) setOrders(data);
   };
 
   // the function to cart
@@ -530,12 +512,12 @@ function page() {
                   exit={{ opacity: 0, scale: 1.05 }}
                   transition={{ duration: 0.5 }}
                 >
+                  {/* fetch order function may needed */}
                   <Checkout
                     items={cartItems}
                     onOrderComplete={() => {
                       clearCart();
                       setCurrentPage("collection");
-                      fetchOrders();
                     }}
                   />
                 </motion.div>

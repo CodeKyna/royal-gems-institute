@@ -38,45 +38,9 @@ import {
   Globe,
   Star,
 } from "lucide-react";
+import { getOrders, getProductById } from "@/utils/api";
 
-export interface BillingDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  country: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image_url: string;
-  category: string;
-}
-
-export interface OrderItem {
-  id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  price: number;
-  products?: Product;
-}
-
-export interface Order {
-  id: string;
-  total_amount: number;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  billing_details: BillingDetails;
-  payment_status: "pending" | "completed" | "failed";
-  payment_id?: string;
-  created_at: string;
-  order_items?: OrderItem[];
-}
+import { Order } from "@/types";
 
 const ORDER_STATUSES = [
   "pending",
@@ -88,128 +52,7 @@ const ORDER_STATUSES = [
 const PAYMENT_STATUSES = ["pending", "completed", "failed"];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "ORD-001",
-      total_amount: 7200.0,
-      status: "processing",
-      billing_details: {
-        firstName: "Emily",
-        lastName: "Johnson",
-        email: "emily.johnson@example.com",
-        phone: "+1-555-0123",
-        address: "123 Diamond Street",
-        city: "New York",
-        postalCode: "10001",
-        country: "United States",
-      },
-      payment_status: "completed",
-      payment_id: "PAY-ABC123",
-      created_at: "2024-09-27T10:30:00Z",
-      order_items: [
-        {
-          id: "ITEM-001",
-          order_id: "ORD-001",
-          product_id: "1",
-          quantity: 1,
-          price: 2500.0,
-          products: {
-            id: "1",
-            name: "Ceylon Blue Sapphire",
-            price: 2500.0,
-            image_url:
-              "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop",
-            category: "Sapphire",
-          },
-        },
-        {
-          id: "ITEM-002",
-          order_id: "ORD-001",
-          product_id: "2",
-          quantity: 1,
-          price: 4700.0,
-          products: {
-            id: "2",
-            name: "Burmese Ruby Premium",
-            price: 4700.0,
-            image_url:
-              "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=100&fit=crop",
-            category: "Ruby",
-          },
-        },
-      ],
-    },
-    {
-      id: "ORD-002",
-      total_amount: 15000.0,
-      status: "shipped",
-      billing_details: {
-        firstName: "Michael",
-        lastName: "Chen",
-        email: "michael.chen@example.com",
-        phone: "+1-555-0456",
-        address: "456 Emerald Avenue",
-        city: "Los Angeles",
-        postalCode: "90210",
-        country: "United States",
-      },
-      payment_status: "completed",
-      payment_id: "PAY-DEF456",
-      created_at: "2024-09-26T14:22:00Z",
-      order_items: [
-        {
-          id: "ITEM-003",
-          order_id: "ORD-002",
-          product_id: "4",
-          quantity: 1,
-          price: 15000.0,
-          products: {
-            id: "4",
-            name: "Pink Diamond Rare",
-            price: 15000.0,
-            image_url:
-              "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop",
-            category: "Diamond",
-          },
-        },
-      ],
-    },
-    {
-      id: "ORD-003",
-      total_amount: 3800.0,
-      status: "pending",
-      billing_details: {
-        firstName: "Sarah",
-        lastName: "Williams",
-        email: "sarah.williams@example.com",
-        phone: "+1-555-0789",
-        address: "789 Ruby Road",
-        city: "Chicago",
-        postalCode: "60601",
-        country: "United States",
-      },
-      payment_status: "pending",
-      created_at: "2024-09-25T09:15:00Z",
-      order_items: [
-        {
-          id: "ITEM-004",
-          order_id: "ORD-003",
-          product_id: "3",
-          quantity: 1,
-          price: 3800.0,
-          products: {
-            id: "3",
-            name: "Colombian Emerald",
-            price: 3800.0,
-            image_url:
-              "https://images.unsplash.com/photo-1544980919-e17526d4ed0a?w=100&h=100&fit=crop",
-            category: "Emerald",
-          },
-        },
-      ],
-    },
-  ]);
-
+  const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -221,6 +64,17 @@ export default function OrdersPage() {
 
   useEffect(() => {
     setMounted(true);
+    async function fetchOrders() {
+      try {
+        const orders: Order[] = await getOrders();
+        if (orders) {
+          setOrders(orders);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchOrders();
   }, []);
 
   useEffect(() => {
@@ -228,13 +82,13 @@ export default function OrdersPage() {
   }, [orders, searchQuery, statusFilter, paymentFilter, dateRange]);
 
   function applyFilters() {
-    let filtered = [...orders];
+    let filtered = orders;
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(
+      filtered = filtered?.filter(
         (order) =>
-          order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          order._id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.billing_details.email
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
@@ -247,35 +101,36 @@ export default function OrdersPage() {
 
     // Status filter
     if (statusFilter !== "All") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
+      filtered = filtered?.filter((order) => order.status === statusFilter);
     }
 
     // Payment filter
     if (paymentFilter !== "All") {
-      filtered = filtered.filter(
+      filtered = filtered?.filter(
         (order) => order.payment_status === paymentFilter
       );
     }
 
     // Date range filter
-    if (dateRange !== "All") {
-      const now = new Date();
-      const filterDate = new Date();
+    // if (dateRange !== "All") {
+    //   const now = new Date();
+    //   const filterDate = new Date();
 
-      if (dateRange === "Today") {
-        filterDate.setHours(0, 0, 0, 0);
-      } else if (dateRange === "This Week") {
-        filterDate.setDate(now.getDate() - 7);
-      } else if (dateRange === "This Month") {
-        filterDate.setMonth(now.getMonth() - 1);
-      }
+    //   if (dateRange === "Today") {
+    //     filterDate.setHours(0, 0, 0, 0);
+    //   } else if (dateRange === "This Week") {
+    //     filterDate.setDate(now.getDate() - 7);
+    //   } else if (dateRange === "This Month") {
+    //     filterDate.setMonth(now.getMonth() - 1);
+    //   }
 
-      filtered = filtered.filter(
-        (order) => new Date(order.created_at) >= filterDate
-      );
+    //   filtered = filtered?.filter(
+    //     (order) => new Date(order.created_at) >= filterDate
+    //   );
+    // }
+    if (filtered != null) {
+      setFilteredOrders(filtered);
     }
-
-    setFilteredOrders(filtered);
   }
 
   async function updateOrderStatus(
@@ -287,7 +142,7 @@ export default function OrdersPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
+          order._id === orderId ? { ...order, status: newStatus } : order
         )
       );
     } finally {
@@ -543,7 +398,7 @@ export default function OrdersPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredOrders.map((order, index) => (
           <Card
-            key={order.id}
+            key={order._id}
             className="group backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border-0 shadow-lg hover:shadow-2xl rounded-xl overflow-hidden transition-all duration-300 transform hover:scale-105 hover:-translate-y-2"
             style={{
               animationDelay: `${index * 0.1}s`,
@@ -557,9 +412,10 @@ export default function OrdersPage() {
                 <div>
                   <CardTitle className="text-lg font-bold text-slate-800 dark:text-white flex items-center">
                     <Package className="h-5 w-5 mr-2 text-blue-500" />
-                    {order.id}
+                    {order._id}
                   </CardTitle>
                   <div className="flex items-center space-x-2 mt-2">
+                    <h1>Order Status</h1>
                     <Badge
                       className={`bg-gradient-to-r ${getStatusColor(
                         order.status
@@ -571,6 +427,7 @@ export default function OrdersPage() {
                           order.status.slice(1)}
                       </span>
                     </Badge>
+                    <h1>Payment Status :</h1>
                     <Badge
                       className={`bg-gradient-to-r ${getPaymentStatusColor(
                         order.payment_status
@@ -608,14 +465,22 @@ export default function OrdersPage() {
                       {order.billing_details.firstName}{" "}
                       {order.billing_details.lastName}
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 flex flex-col items-start">
                       <Mail className="h-3 w-3 mr-1" />
-                      {order.billing_details.email}
+                      <span>email: {order.billing_details.email}</span>
+                      <span>phone: {order.billing_details.phone}</span>
                     </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 flex flex-col items-start">
                       <MapPin className="h-3 w-3 mr-1" />
-                      {order.billing_details.city},{" "}
-                      {order.billing_details.country}
+                      <span>address : {order.billing_details.address}</span>
+                      <span>
+                        city : {order.billing_details.city}, country :
+                        {order.billing_details.country}
+                      </span>
+                      <span>
+                        {" "}
+                        postalCode : {order.billing_details.postalCode}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -630,31 +495,37 @@ export default function OrdersPage() {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {order.order_items.slice(0, 2).map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center space-x-3 bg-white/40 dark:bg-slate-600/40 rounded-lg p-2"
-                        >
-                          <img
-                            src={item.products?.image_url}
-                            alt={item.products?.name}
-                            className="w-8 h-8 rounded object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=50&h=50&fit=crop";
-                            }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-slate-800 dark:text-white truncate">
-                              {item.products?.name}
-                            </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              Qty: {item.quantity} × {formatPrice(item.price)}
-                            </p>
+                      {order.order_items?.slice(0, 2).map((item) => {
+                        const product =
+                          item.products || (item.product_id as any); // populated product
+                        return (
+                          <div
+                            key={item._id}
+                            className="flex items-center space-x-3 bg-white/40 dark:bg-slate-600/40 rounded-lg p-2"
+                          >
+                            <img
+                              src={product?.image_url}
+                              alt={product?.name || "Product"}
+                              className="w-8 h-8 rounded object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null; // avoid infinite loop
+                                e.currentTarget.src =
+                                  "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=50&h=50&fit=crop";
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-slate-800 dark:text-white truncate">
+                                {product?.name}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Qty: {item.quantity} × {formatPrice(item.price)}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                      {order.order_items.length > 2 && (
+                        );
+                      })}
+
+                      {order.order_items && order.order_items.length > 2 && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
                           +{order.order_items.length - 2} more items
                         </p>
@@ -667,7 +538,7 @@ export default function OrdersPage() {
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <div className="flex items-center">
                     <Calendar className="h-3 w-3 mr-1" />
-                    {formatDate(order.created_at)}
+                    {/* {formatDate(order.created_at)} */}
                   </div>
                   {order.payment_id && (
                     <div className="flex items-center">
@@ -682,7 +553,7 @@ export default function OrdersPage() {
                   <Select
                     value={order.status}
                     onValueChange={(newStatus: Order["status"]) =>
-                      updateOrderStatus(order.id, newStatus)
+                      updateOrderStatus(order._id ? order._id : "", newStatus)
                     }
                   >
                     <SelectTrigger className="flex-1 h-8 text-xs bg-white/60 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 rounded-lg">
@@ -744,10 +615,10 @@ export default function OrdersPage() {
                   </div>
                   <div>
                     <CardTitle className="text-xl font-bold text-slate-800 dark:text-white">
-                      Order Details - {selectedOrder.id}
+                      Order Details - {selectedOrder._id}
                     </CardTitle>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Created on {formatDate(selectedOrder.created_at)}
+                      {/* Created on {formatDate(selectedOrder.created_at)} */}
                     </p>
                   </div>
                 </div>
@@ -893,7 +764,7 @@ export default function OrdersPage() {
                   <div className="space-y-4">
                     {selectedOrder.order_items.map((item) => (
                       <div
-                        key={item.id}
+                        key={item._id}
                         className="flex items-center space-x-4 bg-white/40 dark:bg-slate-600/40 rounded-lg p-4"
                       >
                         <img

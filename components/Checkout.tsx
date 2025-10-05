@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CreditCard,
   Shield,
   Check,
-  Lock,
   Crown,
   Sparkles,
   User,
@@ -12,12 +11,11 @@ import {
   Phone,
   MapPin,
   Globe,
-  Calendar,
-  Loader2,
 } from "lucide-react";
-import { CartItem, BillingDetails } from "../types";
-import { supabase } from "../lib/supabase";
+import { CartItem, BillingDetails, Order, OrderItem } from "../types";
+import { createOrder } from "@/utils/api";
 import PayHereCheckoutButton from "./PayhereCheckoutButton";
+import ProductsPage from "@/app/admin/gems/page";
 
 interface CheckoutProps {
   items: CartItem[];
@@ -25,20 +23,6 @@ interface CheckoutProps {
 }
 
 const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
-  const checkout = {
-    order_id: "ORDER-" + Date.now(),
-    items: "Awesome T-shirt",
-    amount: 1500,
-    currency: "LKR",
-    first_name: "Kanchana",
-    last_name: "Wimalasena",
-    email: "you@example.com",
-    phone: "0771234567",
-    address: "No.1, Galle Road",
-    city: "Colombo",
-    country: "Sri Lanka",
-  };
-
   const [billingDetails, setBillingDetails] = useState<BillingDetails>({
     firstName: "",
     lastName: "",
@@ -55,9 +39,66 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
     new Set()
   );
 
-  const total = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
+  //make items ==>> orderItem interface arry to proecss order
+  const orderItems: OrderItem[] = useMemo(() => {
+    items.map((item) => console.log("Product items is", item.product));
+    return items.map((item) => ({
+      product_id: item.product.id,
+      quantity: item.quantity,
+      price: item.product.price,
+      products: item.product,
+    }));
+  }, [items]);
+
+  // Calculate total
+  const total = useMemo(
+    () =>
+      items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [items]
+  );
+
+  // Validate form
+  const isFormValid = useMemo(() => {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      postalCode,
+      country,
+    } = billingDetails;
+    return !!(
+      firstName.trim() &&
+      lastName.trim() &&
+      email.trim() &&
+      phone.trim() &&
+      address.trim() &&
+      city.trim() &&
+      postalCode.trim() &&
+      country.trim()
+    );
+  }, [billingDetails]);
+
+  // Create PayHere checkout object
+  const checkout = useMemo(
+    () => ({
+      order_id: "ORDER-" + Date.now(),
+      items: items
+        .map((item) => `${item.product.name} x${item.quantity}`)
+        .join(", "),
+      amount: total,
+      currency: "LKR",
+      first_name: billingDetails.firstName,
+      last_name: billingDetails.lastName,
+      email: billingDetails.email,
+      phone: billingDetails.phone,
+      address: billingDetails.address,
+      city: billingDetails.city,
+      country: billingDetails.country,
+    }),
+    [billingDetails, items, total]
   );
 
   const handleInputChange = (
@@ -80,52 +121,32 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isFormValid || isProcessing) return;
+
     setIsProcessing(true);
 
     try {
       // Create order in database
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          total_amount: total,
-          status: "pending",
-          billing_details: billingDetails,
-          payment_status: "pending",
-        })
-        .select()
-        .single();
+      const orderData: Order = {
+        total_amount: total,
+        status: "pending",
+        billing_details: billingDetails,
+        payment_status: "pending",
+        order_items: orderItems,
+      };
 
-      if (orderError) throw orderError;
+      const createdOrder = createOrder(orderData);
 
+      console.log("Order set to", createdOrder);
       // Create order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-      }));
 
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
+      // Trigger PayHere payment (this should be handled by createPayment in utils)
+      // After successful payment callback from PayHere:
 
-      if (itemsError) throw itemsError;
-
-      // Simulate PayHere payment integration
-      setTimeout(() => {
-        supabase
-          .from("orders")
-          .update({
-            payment_status: "completed",
-            status: "processing",
-            payment_id: "ph_" + Date.now(),
-          })
-          .eq("id", order.id);
-
-        alert("Payment successful! Order has been placed.");
-        onOrderComplete();
-        setIsProcessing(false);
-      }, 3000);
+      alert("Payment successful! Order has been placed.");
+      onOrderComplete();
+      setIsProcessing(false);
     } catch (error) {
       console.error("Error processing order:", error);
       alert("Failed to process order. Please try again.");
@@ -145,6 +166,61 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
       country: Globe,
     };
     return iconMap[fieldName as keyof typeof iconMap] || User;
+  };
+
+  const renderInputField = (
+    field: string,
+    label: string,
+    type: string = "text",
+    placeholder: string = ""
+  ) => {
+    const IconComponent = getFieldIcon(field);
+
+    return (
+      <motion.div
+        key={field}
+        className="relative"
+        whileHover={{ scale: 1.01 }}
+        transition={{ duration: 0.2 }}
+      >
+        <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
+          <IconComponent size={16} className="text-amber-400" />
+          {label} *
+        </label>
+        <div className="relative">
+          <input
+            type={type}
+            name={field}
+            value={billingDetails[field as keyof BillingDetails] as string}
+            onChange={handleInputChange}
+            onFocus={() => setFocusedField(field)}
+            onBlur={() => setFocusedField(null)}
+            required
+            className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
+              focusedField === field
+                ? "border-amber-400 bg-white/15"
+                : completedFields.has(field)
+                ? "border-green-400/50"
+                : "border-white/20 hover:border-white/30"
+            }`}
+            placeholder={placeholder}
+          />
+
+          <AnimatePresence>
+            {completedFields.has(field) && (
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0, rotate: 180 }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <Check size={16} className="text-green-400" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -202,7 +278,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-[168em] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Enhanced Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -212,9 +288,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
         >
           <motion.div
             className="absolute -top-6 left-1/2 transform -translate-x-1/2"
-            animate={{
-              rotate: [0, 360],
-            }}
+            animate={{ rotate: [0, 360] }}
             transition={{
               duration: 20,
               repeat: Infinity,
@@ -266,214 +340,41 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
-                  {["firstName", "lastName"].map((field) => {
-                    const IconComponent = getFieldIcon(field);
-                    return (
-                      <motion.div
-                        key={field}
-                        className="relative"
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
-                          <IconComponent size={16} className="text-amber-400" />
-                          {field === "firstName" ? "First Name" : "Last Name"} *
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            name={field}
-                            value={
-                              billingDetails[
-                                field as keyof BillingDetails
-                              ] as string
-                            }
-                            onChange={handleInputChange}
-                            onFocus={() => setFocusedField(field)}
-                            onBlur={() => setFocusedField(null)}
-                            required
-                            className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
-                              focusedField === field
-                                ? "border-amber-400 bg-white/15"
-                                : completedFields.has(field)
-                                ? "border-green-400/50"
-                                : "border-white/20 hover:border-white/30"
-                            }`}
-                            placeholder={field === "firstName" ? "John" : "Doe"}
-                          />
-
-                          {/* Field completion indicator */}
-                          <AnimatePresence>
-                            {completedFields.has(field) && (
-                              <motion.div
-                                initial={{ scale: 0, rotate: -180 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                exit={{ scale: 0, rotate: 180 }}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                              >
-                                <Check size={16} className="text-green-400" />
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                  {renderInputField("firstName", "First Name", "text", "John")}
+                  {renderInputField("lastName", "Last Name", "text", "Doe")}
                 </div>
 
                 {/* Email and Phone */}
-                {["email", "phone"].map((field) => {
-                  const IconComponent = getFieldIcon(field);
-                  return (
-                    <motion.div
-                      key={field}
-                      className="relative"
-                      whileHover={{ scale: 1.01 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
-                        <IconComponent size={16} className="text-amber-400" />
-                        {field === "email" ? "Email Address" : "Phone Number"} *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={field === "email" ? "email" : "tel"}
-                          name={field}
-                          value={
-                            billingDetails[
-                              field as keyof BillingDetails
-                            ] as string
-                          }
-                          onChange={handleInputChange}
-                          onFocus={() => setFocusedField(field)}
-                          onBlur={() => setFocusedField(null)}
-                          required
-                          className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
-                            focusedField === field
-                              ? "border-amber-400 bg-white/15"
-                              : completedFields.has(field)
-                              ? "border-green-400/50"
-                              : "border-white/20 hover:border-white/30"
-                          }`}
-                          placeholder={
-                            field === "email"
-                              ? "john@example.com"
-                              : "+94 77 123 4567"
-                          }
-                        />
-
-                        <AnimatePresence>
-                          {completedFields.has(field) && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              exit={{ scale: 0, rotate: 180 }}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                            >
-                              <Check size={16} className="text-green-400" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                {renderInputField(
+                  "email",
+                  "Email Address",
+                  "email",
+                  "john@example.com"
+                )}
+                {renderInputField(
+                  "phone",
+                  "Phone Number",
+                  "tel",
+                  "+94 77 123 4567"
+                )}
 
                 {/* Address */}
-                <motion.div
-                  className="relative"
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
-                    <MapPin size={16} className="text-amber-400" />
-                    Street Address *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="address"
-                      value={billingDetails.address}
-                      onChange={handleInputChange}
-                      onFocus={() => setFocusedField("address")}
-                      onBlur={() => setFocusedField(null)}
-                      required
-                      className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
-                        focusedField === "address"
-                          ? "border-amber-400 bg-white/15"
-                          : completedFields.has("address")
-                          ? "border-green-400/50"
-                          : "border-white/20 hover:border-white/30"
-                      }`}
-                      placeholder="123 Main Street"
-                    />
-
-                    <AnimatePresence>
-                      {completedFields.has("address") && (
-                        <motion.div
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          exit={{ scale: 0, rotate: 180 }}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                        >
-                          <Check size={16} className="text-green-400" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
+                {renderInputField(
+                  "address",
+                  "Street Address",
+                  "text",
+                  "123 Main Street"
+                )}
 
                 {/* City, Postal Code, Country */}
                 <div className="grid grid-cols-3 gap-4">
-                  {["city", "postalCode"].map((field) => (
-                    <motion.div
-                      key={field}
-                      className="relative"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <label className="block text-base font-semibold text-slate-300 mb-2 flex items-center gap-2">
-                        <MapPin size={16} className="text-amber-400" />
-                        {field === "city" ? "City" : "Postal Code"} *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name={field}
-                          value={
-                            billingDetails[
-                              field as keyof BillingDetails
-                            ] as string
-                          }
-                          onChange={handleInputChange}
-                          onFocus={() => setFocusedField(field)}
-                          onBlur={() => setFocusedField(null)}
-                          required
-                          className={`w-full bg-white/10 border-2 rounded-xl px-4 py-3 text-base text-white placeholder-white/40 focus:outline-none transition-all duration-300 ${
-                            focusedField === field
-                              ? "border-amber-400 bg-white/15"
-                              : completedFields.has(field)
-                              ? "border-green-400/50"
-                              : "border-white/20 hover:border-white/30"
-                          }`}
-                          placeholder={field === "city" ? "Colombo" : "10100"}
-                        />
-
-                        <AnimatePresence>
-                          {completedFields.has(field) && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              exit={{ scale: 0, rotate: 180 }}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                            >
-                              <Check size={16} className="text-green-400" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {renderInputField("city", "City", "text", "Colombo")}
+                  {renderInputField(
+                    "postalCode",
+                    "Postal Code",
+                    "text",
+                    "10100"
+                  )}
 
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -498,33 +399,13 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
                 </div>
 
                 {/* Submit Button */}
-                <motion.button
+                <PayHereCheckoutButton
                   type="submit"
-                  disabled={isProcessing}
-                  className="w-full relative bg-gradient-to-r from-amber-500 to-orange-600 text-black py-5 rounded-2xl font-bold text-xl hover:from-amber-400 hover:to-orange-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl overflow-hidden"
-                  whileHover={!isProcessing ? { scale: 1.02, y: -2 } : {}}
-                  whileTap={!isProcessing ? { scale: 0.98 } : {}}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 opacity-0 hover:opacity-30 transition-opacity" />
-
-                  <span className="relative z-10 flex items-center justify-center gap-3">
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        Processing Payment...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-6 h-6" />
-                        Pay with PayHere - ${total.toFixed(2)}
-                      </>
-                    )}
-                  </span>
-                </motion.button>
-                <div>
-                  <h1>PayHere Checkout Demo</h1>
-                  <PayHereCheckoutButton checkout={checkout} />
-                </div>
+                  checkout={checkout}
+                  isProcessing={isProcessing}
+                  isValid={isFormValid}
+                  total={total}
+                />
 
                 {/* Security Notice */}
                 <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mt-4">
@@ -598,7 +479,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
                         <p className="text-slate-400 text-sm flex items-center gap-2">
                           <span>Qty: {item.quantity}</span>
                           <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
-                          <span>${item.product.price.toFixed(2)} each</span>
+                          <span>LKR {item.product.price.toFixed(2)} each</span>
                         </p>
                       </div>
                     </div>
@@ -607,7 +488,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
                       className="text-xl font-black bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent"
                       whileHover={{ scale: 1.05 }}
                     >
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      LKR {(item.product.price * item.quantity).toFixed(2)}
                     </motion.p>
                   </motion.div>
                 ))}
@@ -619,7 +500,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-slate-300">
                   <span>Subtotal:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>LKR {total.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
                   <span>Shipping:</span>
@@ -637,19 +518,9 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
                 transition={{ duration: 0.2 }}
               >
                 <span className="font-bold text-white">Total:</span>
-                <motion.span
-                  className="font-black bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 bg-clip-text text-transparent"
-                  animate={{
-                    backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  ${total.toFixed(2)}
-                </motion.span>
+                <span className="font-black bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 bg-clip-text text-transparent">
+                  LKR {total.toFixed(2)}
+                </span>
               </motion.div>
             </div>
 

@@ -68,11 +68,7 @@ export async function getOrderById(id: string): Promise<Order> {
   return res.data;
 }
 
-export async function createOrder(order: {
-  billing_details: BillingDetails;
-  order_items: { product_id: string; quantity: number; price: number }[];
-  total_amount: number;
-}): Promise<Order> {
+export async function createOrder(order: Order): Promise<Order> {
   const res: AxiosResponse<Order> = await axios.post(
     `${API_BASE_URL}/orders`,
     order

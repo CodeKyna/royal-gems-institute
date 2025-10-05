@@ -1,3 +1,5 @@
+import { Timestamp } from "next/dist/server/lib/cache-handlers/types";
+
 export interface Product {
   id: string;
   name: string;
@@ -27,22 +29,20 @@ export interface BillingDetails {
 }
 
 export interface OrderItem {
-  id: string;
-  order_id: string;
+  _id?: string;
   product_id: string;
   quantity: number;
   price: number;
-  products?: Product;
+  products: Product;
 }
 
 export interface Order {
-  id: string;
+  _id?: string;
   total_amount: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   billing_details: BillingDetails;
   payment_status: "pending" | "completed" | "failed";
   payment_id?: string;
-  created_at: string;
   order_items?: OrderItem[];
 }
 
@@ -58,6 +58,14 @@ export type CheckoutRequest = {
   address?: string;
   city?: string;
   country?: string;
+};
+
+export type PaymentRequest = {
+  checkout: CheckoutRequest;
+  isProcessing: boolean;
+  total: number;
+  isValid: boolean;
+  type?: "button" | "submit" | "reset";
 };
 
 export interface PayHereFields {
