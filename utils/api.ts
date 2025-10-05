@@ -1,17 +1,9 @@
 // api.ts
 import axios, { AxiosResponse } from "axios";
-import {
-  Product,
-  Order,
-  OrderItem,
-  BillingDetails,
-  CheckoutRequest,
-  PayHereFields,
-} from "../types";
+import { Product, Order, OrderItem } from "../types";
 
-const API_BASE_URL = "http://localhost:4000/api";
-const NEXT_PAYMENT_API_URL = "http://localhost:5000/api/payment";
-const NEXT_PUBLIC_PAYHERE_MODE = "sandbox";
+const API_BASE_URL =
+  process.env.NEXT_API_BASE_URL || "http://localhost:4000/api";
 
 // ✅ Products
 export async function getProducts(): Promise<Product[]> {
