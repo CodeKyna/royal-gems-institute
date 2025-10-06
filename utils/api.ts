@@ -2,7 +2,7 @@
 import axios, { AxiosResponse } from "axios";
 import { Product, Order, OrderItem } from "../types";
 
-const API_BASE_URL = "https://royal-gems-backend.vercel.app/api";
+const API_BASE_URL = "https://royal-gems-backend-production.up.railway.app/api";
 
 // ✅ Products
 export async function getProducts(): Promise<Product[]> {
