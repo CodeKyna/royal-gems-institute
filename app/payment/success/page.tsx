@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Suspense } from "react";
 import {
   CheckCircle2,
   Crown,
@@ -18,7 +19,7 @@ import { PaymentVerification } from "@/types";
 import { verifyPayment } from "@/utils/payhere";
 import Link from "next/link";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const [mounted, setMounted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -351,5 +352,13 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
