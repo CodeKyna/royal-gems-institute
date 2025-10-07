@@ -1,28 +1,43 @@
+const NEXT_PAYMENT_URL =
+  "https://royal-gems-payment-backend-production.up.railway.app/api";
+
 // 1. Create payment request
 export const createPayment = async (orderData) => {
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/payment/create-payment",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderId: `ORD-${Date.now()}`,
-          items: "Awesome T-shirt",
-          amount: "1500.00",
-          currency: "LKR",
-          firstName: "John",
-          lastName: "Doe",
-          email: "john@example.com",
-          phone: "0771234567",
-          address: "No. 1, Galle Road",
-          city: "Colombo",
-          country: "Sri Lanka",
-        }),
-      }
-    );
+    const {
+      address,
+      amount,
+      city,
+      country,
+      currency,
+      email,
+      first_name,
+      items,
+      last_name,
+      order_id,
+      phone,
+      notify_url,
+    } = orderData;
+    console.log("This is the payload for payhhere", orderData);
+    const response = await fetch(`${NEXT_PAYMENT_URL}/payment/create-payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        orderId: order_id,
+        items: items,
+        amount: amount,
+        currency: currency,
+        firstName: first_name,
+        lastName: last_name,
+        email: email,
+        phone: phone,
+        address: address,
+        city: city,
+        country: country,
+      }),
+    });
 
     if (!response.ok) {
       throw new Error("Payment creation failed");

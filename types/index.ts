@@ -38,6 +38,7 @@ export interface OrderItem {
 
 export interface Order {
   _id?: string;
+  orderId: string;
   total_amount: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   billing_details: BillingDetails;
@@ -86,4 +87,16 @@ export interface PayHereFields {
   country: string;
   hash: string;
   [key: string]: string; // Allow additional fields
+}
+
+export interface PaymentVerification {
+  orderId: string;
+  status: string;
+  amount: number;
+  currency: string;
+  paymentId?: string;
+  statusMessage?: string;
+  paymentMethod?: string;
+  createdAt: string;
+  updatedAt?: string;
 }

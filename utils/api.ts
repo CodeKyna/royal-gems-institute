@@ -2,7 +2,8 @@
 import axios, { AxiosResponse } from "axios";
 import { Product, Order, OrderItem } from "../types";
 
-const API_BASE_URL = "https://royal-gems-backend-production.up.railway.app/api";
+// const API_BASE_URL = "https://royal-gems-backend-production.up.railway.app/api";
+const API_BASE_URL = "http://localhost:4000/api";
 
 // ✅ Products
 export async function getProducts(): Promise<Product[]> {

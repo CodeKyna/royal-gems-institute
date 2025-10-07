@@ -15,6 +15,8 @@ import {
 import { CartItem, BillingDetails, Order, OrderItem } from "../types";
 import { createOrder } from "@/utils/api";
 import PayHereCheckoutButton from "./PayhereCheckoutButton";
+import { createPayment } from "@/utils/payhere";
+import { toast } from "sonner";
 
 interface CheckoutProps {
   items: CartItem[];
@@ -129,6 +131,7 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
       // Create order in database
       const orderData: Order = {
         total_amount: total,
+        orderId: checkout.order_id.toString(),
         status: "pending",
         billing_details: billingDetails,
         payment_status: "pending",
@@ -140,10 +143,18 @@ const Checkout: React.FC<CheckoutProps> = ({ items, onOrderComplete }) => {
       console.log("Order set to", createdOrder);
       // Create order items
 
+      setTimeout(() => {
+        toast.success("Order has been placed, redirecting to payment...");
+      }, 2000);
+      if ((await createdOrder)._id && checkout) {
+        const res = await createPayment(checkout);
+        console.log("Payment response ", res);
+      }
+
       // Trigger PayHere payment (this should be handled by createPayment in utils)
       // After successful payment callback from PayHere:
 
-      alert("Payment successful! Order has been placed.");
+      // alert("Payment successful! Order has been placed.");
       onOrderComplete();
       setIsProcessing(false);
     } catch (error) {
